@@ -952,6 +952,13 @@ function saveHolding() {
   }
 }
 
+function holdingAction(btn) {
+  var user = btn.getAttribute('data-user');
+  var id = btn.getAttribute('data-id');
+  var action = btn.getAttribute('data-action');
+  if (action === 'edit') requireUser(user, openEditHolding, user, id);
+  if (action === 'del') requireUser(user, deleteHolding, user, id);
+}
 var editHoldingId = null;
 function openEditHolding(user, id) {
   var col = 'holdings_' + user;
@@ -1054,29 +1061,148 @@ function deleteHolding(user, id) {
 }
 function renderHoldings() {
   ['minam','yangpa'].forEach(function(user) {
-    var el = document.getElementById(user + '-holding-content');
-    // 보유종목은 누구나 볼 수 있음 (편집만 본인)
-    var holdings = cache['holdings_' + user];
-    if (!holdings.length) { el.innerHTML = '<div class="card"><div style="text-align:center;color:var(--text3);padding:24px;">등록된 종목 없음</div></div>'; return; }
-    var codes = holdings.filter(function(h) { return h.code; }).map(function(h) { return h.code + '.KS'; });
-    function render() {
-      var totalP = 0, totalC = 0, rows = '';
-      holdings.forEach(function(h) {
-        var d = h.code ? priceCache[h.code + '.KS'] : null;
-        var cur = d ? d.price : null;
-        var principal = h.buyPrice * h.qty;
-        var curVal = cur ? cur * h.qty : null;
-        var profit = curVal != null ? curVal - principal : null;
-        var pct = profit != null ? (profit / principal * 100) : null;
-        totalP += principal; if (curVal) totalC += curVal;
-        var pc = profit == null ? '' : profit > 0 ? 'up' : profit < 0 ? 'down' : 'flat';
-        rows += '<tr><td class="td-bold">' + h.name + '</td><td><span class="pill">' + (h.sector || '—') + '</span></td><td class="td-num">' + fmtNum(h.buyPrice) + '원</td><td class="td-num">' + h.qty.toLocaleString() + '주</td><td class="td-num">' + fmtNum(principal) + '원</td><td class="td-num">' + (cur ? fmtNum(cur) + '원' : '—') + '</td><td class="td-num">' + (curVal ? fmtNum(curVal) + '원' : '—') + '</td><td class="td-num ' + pc + '">' + (profit != null ? (profit >= 0 ? '+' : '') + fmtNum(profit) + '원' : '—') + '</td><td class="td-num ' + pc + '">' + (pct != null ? (pct >= 0 ? '+' : '') + fmtNum(pct, 2) + '%' : '—') + '</td><td><button class="btn btn-sm btn-danger" onclick="requireUser(\'' + user + '\',deleteHolding,\'' + user + '\',\'' + h.id + '\')">삭제</button></td></tr>';
-      });
-      var tp = totalC - totalP, tpct = totalP > 0 ? (tp / totalP * 100) : 0;
-      var tc = tp >= 0 ? 'up' : 'down';
-      el.innerHTML = '<div class="card"><div class="tbl-wrap"><table><thead><tr><th>종목명</th><th>섹터</th><th class="td-num">매수가</th><th class="td-num">수량</th><th class="td-num">원금</th><th class="td-num">현재가</th><th class="td-num">평가금액</th><th class="td-num">수익금</th><th class="td-num">수익률</th><th></th></tr></thead><tbody>' + rows + '</tbody><tfoot><tr class="total-row"><td class="td-bold">합계</td><td></td><td></td><td class="td-num td-bold">' + holdings.reduce(function(a,h){return a+h.qty;},0).toLocaleString() + '주</td><td class="td-num td-bold">' + fmtNum(totalP) + '원</td><td></td><td class="td-num td-bold">' + (totalC ? fmtNum(totalC)+'원' : '—') + '</td><td class="td-num td-bold ' + tc + '">' + (totalC ? (tp>=0?'+':'') + fmtNum(tp)+'원' : '—') + '</td><td class="td-num td-bold ' + tc + '">' + (totalC ? (tpct>=0?'+':'') + fmtNum(tpct,2)+'%' : '—') + '</td><td></td></tr></tfoot></table></div></div>';
+    var lockEl = document.getElementById(user + '-lock');
+    var innerEl = document.getElementById(user + '-holding-inner');
+    if (!session[user] && !session.editor) {
+      if (lockEl) lockEl.style.display = 'flex';
+      if (innerEl) innerEl.style.display = 'none';
+      return;
     }
-    if (codes.length) { fetchYahoo(codes).then(render); } else { render(); }
+    if (lockEl) lockEl.style.display = 'none';
+    if (innerEl) innerEl.style.display = 'block';
+
+    renderHoldingStock(user);
+    renderHoldingAccount(user);
+  });
+}
+
+function showHoldingSubTab(user, tab, btn) {
+  // 서브탭 버튼 active
+  var stockBtn = document.getElementById(user + '-sub-stock');
+  var accBtn = document.getElementById(user + '-sub-account');
+  if (stockBtn) stockBtn.classList.toggle('active', tab === 'stock');
+  if (accBtn) accBtn.classList.toggle('active', tab === 'account');
+  // 섹션 보이기/숨기기
+  var stockSec = document.getElementById(user + '-section-stock');
+  var accSec = document.getElementById(user + '-section-account');
+  if (stockSec) stockSec.style.display = tab === 'stock' ? 'block' : 'none';
+  if (accSec) accSec.style.display = tab === 'account' ? 'block' : 'none';
+}
+
+function renderHoldingStock(user) {
+  var el = document.getElementById(user + '-stock-content');
+  if (!el) return;
+  var holdings = cache['holdings_' + user] || [];
+  if (!holdings.length) {
+    var emptyHtml = '<div class="card" style="text-align:center;color:var(--text3);padding:32px;">등록된 종목이 없습니다</div>';
+    el.innerHTML = emptyHtml;
+    return;
+  }
+  var rows = '';
+  var totalBuy = 0, totalCur = 0;
+  holdings.forEach(function(h) {
+    var buyVal = (h.buyPrice||0) * (h.qty||0);
+    var curVal = (h.curPrice||0) * (h.qty||0);
+    var profit = curVal - buyVal;
+    var pct = buyVal > 0 ? (profit/buyVal*100) : 0;
+    totalBuy += buyVal; totalCur += curVal;
+    var pc = profit > 0 ? 'up' : profit < 0 ? 'down' : 'flat';
+    rows += '<tr>';
+    rows += '<td class="td-bold">' + h.name + '</td>';
+    rows += '<td><span class="pill">' + (h.sector||'—') + '</span></td>';
+    rows += '<td class="td-num">' + fmtNum(h.buyPrice) + '원</td>';
+    rows += '<td class="td-num">' + (h.qty||0).toLocaleString() + '주</td>';
+    rows += '<td class="td-num">' + fmtNum(buyVal) + '원</td>';
+    rows += '<td class="td-num">' + fmtNum(h.curPrice||0) + '원</td>';
+    rows += '<td class="td-num">' + fmtNum(curVal) + '원</td>';
+    rows += '<td class="td-num ' + pc + '">' + (profit>=0?'+':'') + fmtNum(profit) + '원</td>';
+    rows += '<td class="td-num ' + pc + '">' + (pct>=0?'+':'') + fmtNum(pct,2) + '%</td>';
+    var editId = h.id;
+    rows += '<td><div style="display:flex;gap:4px;">';
+    rows += '<button class="btn btn-sm" data-user="' + user + '" data-id="' + editId + '" data-action="edit" onclick="holdingAction(this)">수정</button>';
+    rows += '<button class="btn btn-sm btn-danger" data-user="' + user + '" data-id="' + editId + '" data-action="del" onclick="holdingAction(this)">삭제</button>';
+    rows += '</div></td></tr>';
+  });
+  var totPnl = totalCur - totalBuy;
+  var totPct = totalBuy > 0 ? (totPnl/totalBuy*100) : 0;
+  var tc = totPnl >= 0 ? 'up' : 'down';
+  el.innerHTML = '<div class="card"><div class="tbl-wrap"><table>' +
+    '<thead><tr><th>종목명</th><th>섹터</th><th class="td-num">매수가</th><th class="td-num">수량</th><th class="td-num">매수금액</th><th class="td-num">현재가</th><th class="td-num">평가금액</th><th class="td-num">평가손익</th><th class="td-num">수익률</th><th></th></tr></thead>' +
+    '<tbody>' + rows + '</tbody>' +
+    '<tfoot><tr class="total-row"><td class="td-bold" colspan="4">합계</td>' +
+    '<td class="td-num td-bold">' + fmtNum(totalBuy) + '원</td><td></td>' +
+    '<td class="td-num td-bold">' + fmtNum(totalCur) + '원</td>' +
+    '<td class="td-num td-bold ' + tc + '">' + (totPnl>=0?'+':'') + fmtNum(totPnl) + '원</td>' +
+    '<td class="td-num td-bold ' + tc + '">' + (totPct>=0?'+':'') + fmtNum(totPct,2) + '%</td>' +
+    '<td></td></tr></tfoot></table></div></div>';
+}
+
+function renderHoldingAccount(user) {
+  var el = document.getElementById(user + '-account-content');
+  if (!el) return;
+  var holdings = cache['holdings_' + user] || [];
+  var totalCur = holdings.reduce(function(s,h){ return s + (h.curPrice||0)*(h.qty||0); }, 0);
+
+  fbGetAll('accounts').then(function(accs) {
+    var acc = accs.find(function(a){ return a.id === user; }) || {};
+    var deposit = acc.deposit || 0;
+    var withdraw = acc.withdraw || 0;
+    var cash = acc.cash || 0;
+    var realizedPnl = acc.realizedPnl || 0;
+    var interest = acc.interest || 0;
+    var dividend = acc.dividend || 0;
+    var dailyChange = acc.dailyChange || 0;
+
+    var principal = deposit - withdraw;
+    var accountPnl = (totalCur + cash) - principal;
+    var finalPnl = accountPnl + realizedPnl + interest + dividend;
+    var finalPct = principal > 0 ? (finalPnl/principal*100) : 0;
+
+    function pnlHtml(val) {
+      var cls = val > 0 ? 'up' : val < 0 ? 'down' : 'flat';
+      return '<span class="' + cls + '" style="font-size:18px;font-weight:800;">' + (val>=0?'+':'') + fmtNum(val) + '원</span>';
+    }
+    function pctHtml(val) {
+      var cls = val > 0 ? 'up' : val < 0 ? 'down' : 'flat';
+      return '<span class="' + cls + '" style="font-size:15px;font-weight:700;">' + (val>=0?'+':'') + fmtNum(val,2) + '%</span>';
+    }
+
+    // 최종손익 하이라이트 카드
+    var highlight = '<div style="background:linear-gradient(135deg,#3b5bdb,#7048e8);border-radius:14px;padding:20px 24px;color:#fff;margin-bottom:20px;display:flex;flex-wrap:wrap;gap:20px;align-items:center;">';
+    highlight += '<div><div style="font-size:12px;opacity:.8;margin-bottom:4px;">🏆 최종손익 (실현+계좌+이자+배당)</div>';
+    highlight += '<div style="font-size:24px;font-weight:800;">' + (finalPnl>=0?'+':'') + fmtNum(finalPnl) + '원</div></div>';
+    highlight += '<div style="width:1px;height:40px;background:rgba(255,255,255,.3);"></div>';
+    highlight += '<div><div style="font-size:12px;opacity:.8;margin-bottom:4px;">💹 원금대비 수익률</div>';
+    highlight += '<div style="font-size:20px;font-weight:800;">' + (finalPct>=0?'+':'') + fmtNum(finalPct,2) + '%</div></div>';
+    highlight += '<div style="width:1px;height:40px;background:rgba(255,255,255,.3);"></div>';
+    highlight += '<div><div style="font-size:12px;opacity:.8;margin-bottom:4px;">📊 일별변동 (자동)</div>';
+    highlight += '<div style="font-size:18px;font-weight:800;">' + (dailyChange>=0?'+':'') + fmtNum(dailyChange) + '원</div>';
+    if (acc.updatedDate) highlight += '<div style="font-size:10px;opacity:.7;margin-top:2px;">' + acc.updatedDate + ' 기준</div>';
+    highlight += '</div></div>';
+
+    // 상세 카드 그리드
+    var items = [
+      { label: '💵 총 입금', value: fmtNum(deposit) + '원' },
+      { label: '💸 총 출금', value: fmtNum(withdraw) + '원' },
+      { label: '📦 원금 (입금-출금)', value: '<strong>' + fmtNum(principal) + '원</strong>' },
+      { label: '💰 현금잔고', value: fmtNum(cash) + '원' },
+      { label: '📈 보유종목 평가금액', value: fmtNum(totalCur) + '원' },
+      { label: '📊 계좌손익 (평가+현금-원금)', value: pnlHtml(accountPnl) },
+      { label: '✅ 실현손익', value: pnlHtml(realizedPnl) },
+      { label: '🏦 이자', value: fmtNum(interest) + '원' },
+      { label: '🎁 배당금', value: fmtNum(dividend) + '원' },
+    ];
+
+    var grid = '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px;margin-bottom:16px;">';
+    items.forEach(function(item) {
+      grid += '<div class="card" style="padding:14px 16px;">';
+      grid += '<div style="font-size:11px;color:var(--text3);font-weight:700;letter-spacing:.4px;margin-bottom:6px;">' + item.label + '</div>';
+      grid += '<div style="font-size:16px;font-weight:700;">' + item.value + '</div>';
+      grid += '</div>';
+    });
+    grid += '</div>';
+
+    el.innerHTML = highlight + grid;
   });
 }
 
