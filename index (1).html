@@ -1,0 +1,1123 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>미남과 양파의 경제적 자유</title>
+<!-- Firebase SDKs -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<style>
+:root{--bg:#f8f9fa;--surface:#fff;--surface2:#f1f3f5;--border:#e0e4e8;--text:#1a1d23;--text2:#4a5568;--text3:#8492a6;--accent:#2563eb;--accent-bg:#eff6ff;--success:#059669;--success-bg:#ecfdf5;--danger:#dc2626;--danger-bg:#fef2f2;--warning:#d97706;--radius:10px;--radius-sm:6px;--shadow:0 1px 3px rgba(0,0,0,.08);--shadow-md:0 4px 12px rgba(0,0,0,.10);--font:'Pretendard',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;}
+[data-theme="dark"]{--bg:#0f1117;--surface:#1a1d2e;--surface2:#252837;--border:#2e3248;--text:#e8eaf0;--text2:#9ba3bf;--text3:#5a6380;--accent:#60a5fa;--accent-bg:#1e2a3d;--success:#34d399;--success-bg:#0d2418;--danger:#f87171;--danger-bg:#2d1010;--warning:#fbbf24;--shadow:0 1px 3px rgba(0,0,0,.3);--shadow-md:0 4px 12px rgba(0,0,0,.4);}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh;font-size:14px;line-height:1.6;transition:background .3s,color .3s;}
+header{background:var(--surface);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:100;box-shadow:var(--shadow);}
+.header-inner{max-width:1400px;margin:0 auto;padding:0 20px;display:flex;align-items:center;gap:16px;height:60px;}
+.logo{font-size:16px;font-weight:700;background:linear-gradient(135deg,#2563eb,#7c3aed);-webkit-background-clip:text;-webkit-text-fill-color:transparent;white-space:nowrap;flex-shrink:0;}
+nav{display:flex;gap:2px;flex:1;overflow-x:auto;}nav::-webkit-scrollbar{display:none;}
+.nav-btn{padding:6px 12px;border-radius:var(--radius-sm);border:none;background:transparent;cursor:pointer;color:var(--text2);font-size:13px;font-weight:500;white-space:nowrap;transition:all .15s;font-family:var(--font);}
+.nav-btn:hover{background:var(--surface2);color:var(--text);}
+.nav-btn.active{background:var(--accent-bg);color:var(--accent);font-weight:600;}
+.header-actions{display:flex;gap:8px;align-items:center;flex-shrink:0;}
+.icon-btn{width:34px;height:34px;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--surface);cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--text2);font-size:16px;transition:all .15s;}
+.icon-btn:hover{background:var(--surface2);}
+.sync-dot{font-size:12px;}
+main{max-width:1400px;margin:0 auto;padding:24px 20px;}
+.page{display:none;}.page.active{display:block;}
+.card{background:var(--surface);border-radius:var(--radius);border:1px solid var(--border);padding:20px;box-shadow:var(--shadow);}
+.card-title{font-size:13px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:14px;}
+.section-title{font-size:16px;font-weight:700;color:var(--text);margin-bottom:12px;}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+.grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;}
+.grid-auto{display:grid;grid-template-columns:repeat(auto-fill,minmax(155px,1fr));gap:12px;}
+.mb-16{margin-bottom:16px;}
+.idx-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;box-shadow:var(--shadow);transition:transform .15s;}
+.idx-card:hover{transform:translateY(-1px);box-shadow:var(--shadow-md);}
+.idx-name{font-size:11px;color:var(--text3);margin-bottom:4px;font-weight:500;}
+.idx-value{font-size:17px;font-weight:700;line-height:1.2;}
+.idx-change{font-size:12px;font-weight:600;margin-top:3px;}
+.up{color:var(--danger);}.down{color:var(--accent);}.flat{color:var(--text3);}
+.tbl-wrap{overflow-x:auto;}
+table{width:100%;border-collapse:collapse;font-size:13px;}
+th{text-align:left;padding:8px 12px;background:var(--surface2);color:var(--text3);font-weight:600;font-size:11px;text-transform:uppercase;border-bottom:1px solid var(--border);white-space:nowrap;}
+td{padding:10px 12px;border-bottom:1px solid var(--border);}
+tr:last-child td{border-bottom:none;}tr:hover td{background:var(--surface2);}
+.td-num{text-align:right;font-variant-numeric:tabular-nums;}.td-bold{font-weight:600;}
+.badge{display:inline-block;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:600;}
+.badge-info{background:var(--accent-bg);color:var(--accent);}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--surface);cursor:pointer;font-size:13px;font-weight:500;color:var(--text2);transition:all .15s;font-family:var(--font);}
+.btn:hover{background:var(--surface2);color:var(--text);}
+.btn-primary{background:var(--accent);color:#fff;border-color:var(--accent);}
+.btn-primary:hover{opacity:.9;color:#fff;}
+.btn-danger{background:var(--danger);color:#fff;border-color:var(--danger);}
+.btn-danger:hover{opacity:.9;}
+.btn-sm{padding:4px 10px;font-size:12px;}
+.form-row{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;}
+.form-group{display:flex;flex-direction:column;gap:5px;}
+.form-group label{font-size:12px;font-weight:600;color:var(--text3);}
+input,select,textarea{padding:7px 11px;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--surface);color:var(--text);font-size:13px;font-family:var(--font);outline:none;transition:border-color .15s;min-width:0;}
+input:focus,select:focus,textarea:focus{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent-bg);}
+textarea{resize:vertical;min-height:80px;}
+.sec-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px;}
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;align-items:center;justify-content:center;padding:20px;}
+.modal-overlay.open{display:flex;}
+.modal{background:var(--surface);border-radius:14px;border:1px solid var(--border);padding:28px;width:100%;max-width:480px;box-shadow:var(--shadow-md);position:relative;max-height:90vh;overflow-y:auto;}
+.modal-title{font-size:16px;font-weight:700;margin-bottom:20px;}
+.modal-close{position:absolute;top:16px;right:16px;width:28px;height:28px;border-radius:50%;border:1px solid var(--border);background:var(--surface2);cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;color:var(--text2);}
+.tabs{display:flex;gap:2px;background:var(--surface2);padding:3px;border-radius:var(--radius-sm);width:fit-content;margin-bottom:16px;}
+.tab{padding:6px 16px;border-radius:5px;border:none;background:transparent;cursor:pointer;font-size:13px;font-weight:500;color:var(--text2);transition:all .15s;font-family:var(--font);}
+.tab.active{background:var(--surface);color:var(--text);box-shadow:var(--shadow);}
+.live-dot{width:7px;height:7px;border-radius:50%;background:var(--success);display:inline-block;animation:pulse 2s infinite;}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.loading-text{color:var(--text3);font-size:13px;text-align:center;padding:20px;}
+.spinner{width:18px;height:18px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite;display:inline-block;}
+@keyframes spin{to{transform:rotate(360deg)}}
+.schedule-item{display:flex;gap:14px;padding:12px 0;border-bottom:1px solid var(--border);align-items:flex-start;}
+.schedule-item:last-child{border-bottom:none;}
+.schedule-date{min-width:72px;}
+.schedule-date-num{font-size:15px;font-weight:700;color:var(--accent);}
+.schedule-date-day{font-size:11px;color:var(--text3);}
+.group-header{display:flex;align-items:center;justify-content:space-between;padding:10px 16px;background:var(--surface2);border-radius:var(--radius-sm);margin-bottom:8px;}
+.group-name{font-weight:600;font-size:14px;}
+.stock-row{display:flex;align-items:center;padding:10px 16px;border-bottom:1px solid var(--border);transition:background .1s;}
+.stock-row:hover{background:var(--surface2);}
+.stock-row:last-child{border-bottom:none;}
+.stock-code{font-size:11px;color:var(--text3);margin-top:2px;}
+.total-row td{background:var(--surface2);font-weight:700;border-top:2px solid var(--border);}
+.update-time{font-size:11px;color:var(--text3);display:flex;align-items:center;gap:6px;}
+.pill{display:inline-block;padding:2px 10px;border-radius:20px;font-size:11px;font-weight:600;background:var(--surface2);color:var(--text3);}
+.issue-card{border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:12px;background:var(--surface);}
+.issue-stocks{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;}
+.rec-card{border:1px solid var(--border);border-radius:var(--radius);padding:16px;background:var(--surface);}
+.memo-card{border:1px solid var(--border);border-radius:var(--radius);margin-bottom:14px;background:var(--surface);overflow:hidden;}
+.memo-card:hover{box-shadow:var(--shadow-md);}
+.memo-card-header{display:flex;align-items:center;gap:10px;padding:14px 16px 10px;border-bottom:1px solid var(--border);background:var(--surface2);}
+.memo-emoji{font-size:24px;flex-shrink:0;}
+.memo-meta{flex:1;min-width:0;}
+.memo-title-text{font-weight:700;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.memo-date-line{font-size:11px;color:var(--text3);margin-top:2px;}
+.memo-tags{display:flex;gap:5px;flex-wrap:wrap;}
+.memo-tag{display:inline-block;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:600;background:var(--accent-bg);color:var(--accent);}
+.memo-body{padding:14px 16px;font-size:14px;line-height:1.8;color:var(--text2);}
+.memo-images{display:flex;gap:8px;flex-wrap:wrap;padding:0 16px 14px;}
+.memo-images img{width:100px;height:80px;object-fit:cover;border-radius:var(--radius-sm);border:1px solid var(--border);cursor:pointer;transition:transform .15s;}
+.memo-images img:hover{transform:scale(1.05);}
+.memo-footer{padding:10px 16px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;}
+.emoji-btn{width:36px;height:36px;border-radius:8px;border:2px solid transparent;background:var(--surface2);cursor:pointer;font-size:18px;display:flex;align-items:center;justify-content:center;transition:all .15s;}
+.emoji-btn:hover{background:var(--accent-bg);}
+.emoji-btn.selected{border-color:var(--accent);background:var(--accent-bg);}
+.tag-btn{padding:5px 12px;border-radius:20px;border:1.5px solid var(--border);background:var(--surface2);cursor:pointer;font-size:12px;font-weight:600;color:var(--text3);transition:all .15s;font-family:var(--font);}
+.tag-btn:hover{border-color:var(--accent);color:var(--accent);}
+.tag-btn.selected{border-color:var(--accent);background:var(--accent-bg);color:var(--accent);}
+.lightbox{display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:500;align-items:center;justify-content:center;cursor:pointer;}
+.lightbox.open{display:flex;}
+.lightbox img{max-width:90vw;max-height:90vh;border-radius:var(--radius);}
+.img-preview-wrap{position:relative;display:inline-block;}
+.img-preview-wrap img{width:80px;height:64px;object-fit:cover;border-radius:var(--radius-sm);border:1px solid var(--border);}
+.img-preview-del{position:absolute;top:-6px;right:-6px;width:18px;height:18px;border-radius:50%;background:var(--danger);color:#fff;border:none;cursor:pointer;font-size:11px;display:flex;align-items:center;justify-content:center;}
+.private-lock{min-height:180px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;color:var(--text3);text-align:center;}
+.drop-zone{border:2px dashed var(--border);border-radius:var(--radius);padding:16px;text-align:center;cursor:pointer;color:var(--text3);font-size:13px;}
+@media(max-width:768px){.grid-2,.grid-3{grid-template-columns:1fr 1fr;}}
+@media(max-width:480px){.grid-2,.grid-3,.grid-auto{grid-template-columns:1fr 1fr;}main{padding:16px 12px;}}
+</style>
+</head>
+<body>
+<header>
+  <div class="header-inner">
+    <div class="logo">💰 미남과 양파의 경제적 자유</div>
+    <nav>
+      <button class="nav-btn active" id="navSchedule" onclick="showPage('schedule',this)">📅 주요일정</button>
+      <button class="nav-btn" onclick="showPage('supply',this)">📊 수급체크</button>
+      <button class="nav-btn" onclick="showPage('watchlist',this)">⭐ 관심종목</button>
+      <button class="nav-btn" onclick="showPage('holdings',this)">💼 보유종목</button>
+      <button class="nav-btn" onclick="showPage('recommend',this)">🎯 추천종목</button>
+      <button class="nav-btn" onclick="showPage('issues',this)">🔔 이슈사항</button>
+      <button class="nav-btn" onclick="showPage('memo',this)">📝 일기</button>
+    </nav>
+    <div class="header-actions">
+      <span class="sync-dot" id="syncDot" title="Firebase 연결상태">⏳</span>
+      <button class="icon-btn" onclick="toggleTheme()" id="themeBtn">🌙</button>
+      <button class="btn btn-primary" onclick="openLogin()" id="loginBtn" style="font-size:13px;padding:6px 14px;">🔐 로그인</button>
+    </div>
+  </div>
+</header>
+<main>
+
+<!-- 주요일정 -->
+<div class="page active" id="page-schedule">
+  <div class="sec-header">
+    <div class="section-title">📅 이달의 주요 일정</div>
+    <div style="display:flex;gap:8px;align-items:center;">
+      <select id="scheduleMonth" onchange="renderSchedule()" style="width:auto;">
+        <option value="2025-01">2025년 1월</option><option value="2025-02">2025년 2월</option>
+        <option value="2025-03">2025년 3월</option><option value="2025-04">2025년 4월</option>
+        <option value="2025-05">2025년 5월</option><option value="2025-06">2025년 6월</option>
+        <option value="2025-07">2025년 7월</option><option value="2025-08">2025년 8월</option>
+        <option value="2025-09">2025년 9월</option><option value="2025-10">2025년 10월</option>
+        <option value="2025-11">2025년 11월</option><option value="2025-12">2025년 12월</option>
+        <option value="2026-01">2026년 1월</option><option value="2026-02">2026년 2월</option>
+        <option value="2026-03">2026년 3월</option><option value="2026-04">2026년 4월</option>
+        <option value="2026-05">2026년 5월</option><option value="2026-06">2026년 6월</option>
+        <option value="2026-07">2026년 7월</option><option value="2026-08">2026년 8월</option>
+        <option value="2026-09">2026년 9월</option><option value="2026-10">2026년 10월</option>
+        <option value="2026-11">2026년 11월</option><option value="2026-12">2026년 12월</option>
+      </select>
+      <button class="btn btn-primary" onclick="requireEditor(openAddSchedule)">+ 일정 추가</button>
+    </div>
+  </div>
+  <!-- 범례 -->
+  <div style="display:flex;gap:16px;margin-bottom:16px;flex-wrap:wrap;">
+    <div style="display:flex;align-items:center;gap:6px;font-size:12px;"><span style="width:12px;height:12px;border-radius:3px;background:#dbeafe;border:1px solid #93c5fd;display:inline-block;"></span> 자동 고정 일정</div>
+    <div style="display:flex;align-items:center;gap:6px;font-size:12px;"><span style="width:12px;height:12px;border-radius:3px;background:#dcfce7;border:1px solid #86efac;display:inline-block;"></span> 직접 입력 일정</div>
+  </div>
+  <div class="grid-2">
+    <div class="card"><div class="card-title">🇰🇷 국내 경제</div><div id="krScheduleList"></div></div>
+    <div class="card"><div class="card-title">🇺🇸 미국 경제</div><div id="usScheduleList"></div></div>
+  </div>
+</div>
+
+<!-- 수급체크 -->
+<div class="page" id="page-supply">
+  <div class="sec-header">
+    <div class="section-title">📊 수급체크</div>
+    <div style="display:flex;gap:8px;align-items:center;">
+      <input type="date" id="supplyDateFilter" onchange="renderSupply()">
+      <button class="btn" onclick="document.getElementById('supplyDateFilter').value='';renderSupply()">전체보기</button>
+      <button class="btn btn-primary" onclick="requireEditor(openAddSupply)">+ 수급 입력</button>
+    </div>
+  </div>
+
+  <div class="grid-2">
+    <!-- 외국인 -->
+    <div class="card">
+      <div class="card-title" style="color:var(--danger);">🌏 외국인</div>
+      <div class="tabs" style="margin-bottom:12px;">
+        <button class="tab active" onclick="showSupplyTab('foreign','buy',this)">매수</button>
+        <button class="tab" onclick="showSupplyTab('foreign','sell',this)">매도</button>
+      </div>
+      <div id="foreign-buy-list"></div>
+      <div id="foreign-sell-list" style="display:none;"></div>
+    </div>
+    <!-- 기관 -->
+    <div class="card">
+      <div class="card-title" style="color:var(--accent);">🏦 기관</div>
+      <div class="tabs" style="margin-bottom:12px;">
+        <button class="tab active" onclick="showSupplyTab('institute','buy',this)">매수</button>
+        <button class="tab" onclick="showSupplyTab('institute','sell',this)">매도</button>
+      </div>
+      <div id="institute-buy-list"></div>
+      <div id="institute-sell-list" style="display:none;"></div>
+    </div>
+  </div>
+</div>
+
+<!-- 관심종목 -->
+<div class="page" id="page-watchlist">
+  <div class="sec-header"><div class="section-title">⭐ 관심종목</div><button class="btn btn-primary" onclick="requireEditor(openAddGroup)">+ 그룹 추가</button></div>
+  <div id="watchlistContainer"><div class="loading-text"><div class="spinner"></div></div></div>
+</div>
+
+<!-- 보유종목 -->
+<div class="page" id="page-holdings">
+  <div class="section-title mb-16">💼 보유종목</div>
+  <div class="tabs">
+    <button class="tab active" onclick="showHoldingTab('minam',this)">🧑 미남</button>
+    <button class="tab" onclick="showHoldingTab('yangpa',this)">🧅 양파</button>
+  </div>
+  <div id="holding-minam">
+    <div class="sec-header"><span style="font-weight:700;">🧑 미남 포트폴리오</span><button class="btn btn-primary" onclick="requireUser('minam',openAddHolding,'minam')">+ 종목 추가</button></div>
+    <div id="minam-holding-content"><div class="private-lock">🔒<div>미남 로그인 후 확인 가능합니다</div></div></div>
+  </div>
+  <div id="holding-yangpa" style="display:none;">
+    <div class="sec-header"><span style="font-weight:700;">🧅 양파 포트폴리오</span><button class="btn btn-primary" onclick="requireUser('yangpa',openAddHolding,'yangpa')">+ 종목 추가</button></div>
+    <div id="yangpa-holding-content"><div class="private-lock">🔒<div>양파 로그인 후 확인 가능합니다</div></div></div>
+  </div>
+</div>
+
+<!-- 추천종목 -->
+<div class="page" id="page-recommend">
+  <div class="sec-header"><div class="section-title">🎯 추천종목</div><button class="btn btn-primary" onclick="requireEditor(openAddRecommend)">+ 추천종목 추가</button></div>
+  <div id="recommendContainer"><div class="loading-text"><div class="spinner"></div></div></div>
+</div>
+
+<!-- 이슈사항 -->
+<div class="page" id="page-issues">
+  <div class="sec-header"><div class="section-title">🔔 이슈사항</div><button class="btn btn-primary" onclick="requireEditor(openAddIssue)">+ 이슈 추가</button></div>
+  <div id="issueContainer"><div class="loading-text"><div class="spinner"></div></div></div>
+</div>
+
+<!-- 일기 -->
+<div class="page" id="page-memo">
+  <div class="section-title mb-16">📝 메모 · 일기</div>
+  <div class="tabs">
+    <button class="tab active" onclick="showMemoTab('minam',this)">🧑 미남 일기</button>
+    <button class="tab" onclick="showMemoTab('yangpa',this)">🧅 양파 일기</button>
+  </div>
+  <div id="memo-minam">
+    <div class="sec-header">
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+        <input type="text" id="minamMemoSearch" placeholder="🔍 검색" style="width:150px;" oninput="renderMemos('minam')">
+        <input type="date" id="minamMemoDateFrom" onchange="renderMemos('minam')">
+        <span style="color:var(--text3);">~</span>
+        <input type="date" id="minamMemoDateTo" onchange="renderMemos('minam')">
+        <select id="minamMemoTagFilter" onchange="renderMemos('minam')" style="width:110px;">
+          <option value="">전체 태그</option><option value="매수">📌 매수</option><option value="매도">📤 매도</option>
+          <option value="시황">📊 시황</option><option value="수익">💰 수익</option><option value="손실">📉 손실</option>
+          <option value="공부">📚 공부</option><option value="기타">🗒️ 기타</option>
+        </select>
+      </div>
+      <button class="btn btn-primary" onclick="requireUser('minam',openAddMemo,'minam')">+ 일기 작성</button>
+    </div>
+    <div id="minamMemoList"><div class="private-lock">🔒<div>미남 로그인 후 확인 가능합니다</div></div></div>
+  </div>
+  <div id="memo-yangpa" style="display:none;">
+    <div class="sec-header">
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+        <input type="text" id="yangpaMemoSearch" placeholder="🔍 검색" style="width:150px;" oninput="renderMemos('yangpa')">
+        <input type="date" id="yangpaMemoDateFrom" onchange="renderMemos('yangpa')">
+        <span style="color:var(--text3);">~</span>
+        <input type="date" id="yangpaMemoDateTo" onchange="renderMemos('yangpa')">
+        <select id="yangpaMemoTagFilter" onchange="renderMemos('yangpa')" style="width:110px;">
+          <option value="">전체 태그</option><option value="매수">📌 매수</option><option value="매도">📤 매도</option>
+          <option value="시황">📊 시황</option><option value="수익">💰 수익</option><option value="손실">📉 손실</option>
+          <option value="공부">📚 공부</option><option value="기타">🗒️ 기타</option>
+        </select>
+      </div>
+      <button class="btn btn-primary" onclick="requireUser('yangpa',openAddMemo,'yangpa')">+ 일기 작성</button>
+    </div>
+    <div id="yangpaMemoList"><div class="private-lock">🔒<div>양파 로그인 후 확인 가능합니다</div></div></div>
+  </div>
+</div>
+</main>
+
+<!-- MODALS -->
+<div class="modal-overlay" id="loginModal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('loginModal')">✕</button>
+    <div class="modal-title">🔐 로그인</div>
+    <div class="tabs" id="loginTabs">
+      <button class="tab active" onclick="setLoginMode('minam',this)">🧑 미남</button>
+      <button class="tab" onclick="setLoginMode('yangpa',this)">🧅 양파</button>
+    </div>
+    <div class="form-group" style="margin-bottom:14px;">
+      <label id="loginLabel">미남 비밀번호</label>
+      <input type="password" id="loginPw" placeholder="비밀번호 입력" onkeydown="if(event.key==='Enter')doLogin()">
+    </div>
+    <div style="display:flex;gap:8px;justify-content:flex-end;">
+      <button class="btn" onclick="closeModal('loginModal')">취소</button>
+      <button class="btn btn-primary" onclick="doLogin()">로그인</button>
+    </div>
+    <div id="loginMsg" style="color:var(--danger);font-size:12px;margin-top:8px;text-align:center;"></div>
+    <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border);">
+      <div style="font-size:12px;color:var(--text3);margin-bottom:8px;">비밀번호 설정 (첫 사용시)</div>
+      <div class="form-row">
+        <div class="form-group" style="flex:1;"><input type="password" id="setPw" placeholder="새 비밀번호 (4자 이상)"></div>
+        <button class="btn btn-sm" onclick="setPassword()">설정</button>
+      </div>
+      <div id="setPwMsg" style="font-size:12px;margin-top:6px;"></div>
+    </div>
+  </div>
+</div>
+<div class="modal-overlay" id="scheduleModal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('scheduleModal')">✕</button>
+    <div class="modal-title">📅 일정 추가</div>
+    <div class="form-group mb-16"><label>날짜</label><input type="date" id="schDate"></div>
+    <div class="form-group mb-16"><label>구분</label><select id="schType"><option value="kr">🇰🇷 국내 경제 (국내 탭에 표시)</option><option value="us">🇺🇸 미국 경제 (미국 탭에 표시)</option><option value="custom">📌 기타 (국내 탭에 표시)</option></select></div>
+    <div class="form-group mb-16"><label>제목</label><input type="text" id="schTitle" placeholder="예: 한국은행 기준금리 결정"></div>
+    <div class="form-group mb-16"><label>상세내용</label><textarea id="schDesc"></textarea></div>
+    <div style="display:flex;gap:8px;justify-content:flex-end;"><button class="btn" onclick="closeModal('scheduleModal')">취소</button><button class="btn btn-primary" onclick="saveSchedule()">저장</button></div>
+  </div>
+</div>
+<div class="modal-overlay" id="groupModal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('groupModal')">✕</button>
+    <div class="modal-title">⭐ 그룹 추가</div>
+    <div class="form-group mb-16"><label>그룹명</label><input type="text" id="groupName" placeholder="예: 반도체, 2차전지"></div>
+    <div style="display:flex;gap:8px;justify-content:flex-end;"><button class="btn" onclick="closeModal('groupModal')">취소</button><button class="btn btn-primary" onclick="saveGroup()">저장</button></div>
+  </div>
+</div>
+<div class="modal-overlay" id="watchModal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('watchModal')">✕</button>
+    <div class="modal-title">종목 추가</div>
+    <div class="form-group mb-16"><label>종목코드</label><input type="text" id="watchCode" placeholder="005930"></div>
+    <div class="form-group mb-16"><label>종목명</label><input type="text" id="watchName" placeholder="삼성전자"></div>
+    <div style="display:flex;gap:8px;justify-content:flex-end;"><button class="btn" onclick="closeModal('watchModal')">취소</button><button class="btn btn-primary" onclick="saveWatchStock()">추가</button></div>
+  </div>
+</div>
+<div class="modal-overlay" id="holdingModal">
+  <div class="modal" style="max-width:520px;">
+    <button class="modal-close" onclick="closeModal('holdingModal')">✕</button>
+    <div class="modal-title" id="holdingModalTitle">종목 추가</div>
+    <div class="form-row mb-16"><div class="form-group" style="flex:2;"><label>종목명</label><input type="text" id="hName" placeholder="삼성전자"></div><div class="form-group" style="flex:1;"><label>종목코드</label><input type="text" id="hCode" placeholder="005930"></div></div>
+    <div class="form-group mb-16"><label>섹터</label><input type="text" id="hSector" placeholder="반도체"></div>
+    <div class="form-row mb-16"><div class="form-group" style="flex:1;"><label>매수가</label><input type="number" id="hBuyPrice"></div><div class="form-group" style="flex:1;"><label>수량</label><input type="number" id="hQty"></div></div>
+    <div style="display:flex;gap:8px;justify-content:flex-end;"><button class="btn" onclick="closeModal('holdingModal')">취소</button><button class="btn btn-primary" onclick="saveHolding()">저장</button></div>
+  </div>
+</div>
+<div class="modal-overlay" id="recommendModal">
+  <div class="modal" style="max-width:520px;">
+    <button class="modal-close" onclick="closeModal('recommendModal')">✕</button>
+    <div class="modal-title">🎯 추천종목 추가</div>
+    <div class="form-row mb-16"><div class="form-group" style="flex:2;"><label>종목명</label><input type="text" id="rName"></div><div class="form-group" style="flex:1;"><label>섹터</label><input type="text" id="rSector"></div></div>
+    <div class="form-row mb-16"><div class="form-group" style="flex:1;"><label>매수가</label><input type="number" id="rBuyPrice"></div><div class="form-group" style="flex:1;"><label>목표가</label><input type="number" id="rTarget"></div></div>
+    <div class="form-group mb-16"><label>매수 사유</label><textarea id="rReason"></textarea></div>
+    <div style="display:flex;gap:8px;justify-content:flex-end;"><button class="btn" onclick="closeModal('recommendModal')">취소</button><button class="btn btn-primary" onclick="saveRecommend()">저장</button></div>
+  </div>
+</div>
+<div class="modal-overlay" id="issueModal">
+  <div class="modal" style="max-width:540px;">
+    <button class="modal-close" onclick="closeModal('issueModal')">✕</button>
+    <div class="modal-title">🔔 이슈 추가</div>
+    <div class="form-group mb-16"><label>날짜</label><input type="date" id="issueDate"></div>
+    <div class="form-group mb-16"><label>이슈 제목</label><input type="text" id="issueTitle"></div>
+    <div class="form-group mb-16"><label>상세 내용</label><textarea id="issueBody" style="min-height:100px;"></textarea></div>
+    <div class="form-group mb-16"><label>예상 종목 (쉼표 구분)</label><input type="text" id="issueStocks" placeholder="삼성전자, SK하이닉스"></div>
+    <div class="form-group mb-16">
+      <label>이미지/파일 첨부</label>
+      <div class="drop-zone" onclick="document.getElementById('issueFileInput').click()" ondragover="event.preventDefault();this.style.borderColor='var(--accent)'" ondragleave="this.style.borderColor='var(--border)'" ondrop="handleIssueFileDrop(event)">📎 클릭하거나 드래그하여 첨부 (이미지, PDF 등)</div>
+      <input type="file" id="issueFileInput" accept="image/*,.pdf,.xlsx,.xls,.doc,.docx" multiple style="display:none" onchange="handleIssueFileSelect(event)">
+      <div id="issueFilePreview" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;"></div>
+    </div>
+    <div style="display:flex;gap:8px;justify-content:flex-end;"><button class="btn" onclick="closeModal('issueModal')">취소</button><button class="btn btn-primary" onclick="saveIssue()">저장</button></div>
+  </div>
+</div>
+<!-- 수급 입력 모달 -->
+<div class="modal-overlay" id="supplyModal">
+  <div class="modal" style="max-width:540px;">
+    <button class="modal-close" onclick="closeModal('supplyModal')">✕</button>
+    <div class="modal-title">📊 수급 입력</div>
+    <div class="form-row mb-16">
+      <div class="form-group" style="flex:1;">
+        <label>날짜</label>
+        <input type="date" id="supplyDate">
+      </div>
+      <div class="form-group" style="flex:1;">
+        <label>구분</label>
+        <select id="supplyType">
+          <option value="foreign_buy">외국인 매수</option>
+          <option value="foreign_sell">외국인 매도</option>
+          <option value="institute_buy">기관 매수</option>
+          <option value="institute_sell">기관 매도</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-group mb-16">
+      <label>종목명</label>
+      <input type="text" id="supplyStock" placeholder="예: 삼성전자">
+    </div>
+    <div class="form-group mb-16">
+      <label>금액 (억원)</label>
+      <input type="number" id="supplyAmount" placeholder="예: 1500">
+    </div>
+    <div class="form-group mb-16">
+      <label>메모 (선택)</label>
+      <input type="text" id="supplyMemo" placeholder="간단한 메모">
+    </div>
+    <div style="display:flex;gap:8px;justify-content:flex-end;">
+      <button class="btn" onclick="closeModal('supplyModal')">취소</button>
+      <button class="btn btn-primary" onclick="saveSupply()">저장</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="memoModal">
+  <div class="modal" style="max-width:560px;">
+    <button class="modal-close" onclick="closeModal('memoModal')">✕</button>
+    <div class="modal-title" id="memoModalTitle">📝 일기 작성</div>
+    <div class="form-row mb-16" style="align-items:flex-start;">
+      <div class="form-group" style="flex:1;"><label>날짜</label><input type="date" id="memoDate"></div>
+      <div class="form-group" style="flex:2;"><label>오늘의 감정</label>
+        <div style="display:flex;gap:5px;flex-wrap:wrap;padding:4px 0;">
+          <button type="button" class="emoji-btn" onclick="selectEmoji(this,'😄')">😄</button><button type="button" class="emoji-btn" onclick="selectEmoji(this,'😊')">😊</button>
+          <button type="button" class="emoji-btn" onclick="selectEmoji(this,'😐')">😐</button><button type="button" class="emoji-btn" onclick="selectEmoji(this,'😟')">😟</button>
+          <button type="button" class="emoji-btn" onclick="selectEmoji(this,'😡')">😡</button><button type="button" class="emoji-btn" onclick="selectEmoji(this,'🤑')">🤑</button>
+          <button type="button" class="emoji-btn" onclick="selectEmoji(this,'😰')">😰</button><button type="button" class="emoji-btn" onclick="selectEmoji(this,'🤔')">🤔</button>
+          <button type="button" class="emoji-btn" onclick="selectEmoji(this,'🚀')">🚀</button><button type="button" class="emoji-btn" onclick="selectEmoji(this,'💸')">💸</button>
+        </div>
+        <input type="hidden" id="memoEmoji">
+      </div>
+    </div>
+    <div class="form-group mb-16"><label>제목</label><input type="text" id="memoTitle" placeholder="오늘 일기 제목"></div>
+    <div class="form-group mb-16"><label>태그</label>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;padding:4px 0;">
+        <button type="button" class="tag-btn" onclick="this.classList.toggle('selected')">📌 매수</button>
+        <button type="button" class="tag-btn" onclick="this.classList.toggle('selected')">📤 매도</button>
+        <button type="button" class="tag-btn" onclick="this.classList.toggle('selected')">📊 시황</button>
+        <button type="button" class="tag-btn" onclick="this.classList.toggle('selected')">💰 수익</button>
+        <button type="button" class="tag-btn" onclick="this.classList.toggle('selected')">📉 손실</button>
+        <button type="button" class="tag-btn" onclick="this.classList.toggle('selected')">📚 공부</button>
+        <button type="button" class="tag-btn" onclick="this.classList.toggle('selected')">🗒️ 기타</button>
+      </div>
+    </div>
+    <div class="form-group mb-16"><label>내용</label><textarea id="memoContent" style="min-height:140px;" placeholder="오늘의 투자 일기를 자유롭게 작성하세요..."></textarea></div>
+    <div class="form-group mb-16"><label>이미지 첨부</label>
+      <div class="drop-zone" onclick="document.getElementById('memoImgInput').click()" ondragover="event.preventDefault();this.style.borderColor='var(--accent)'" ondragleave="this.style.borderColor='var(--border)'" ondrop="handleImgDrop(event)">📎 클릭하거나 드래그하여 첨부</div>
+      <input type="file" id="memoImgInput" accept="image/*" multiple style="display:none" onchange="handleImgSelect(event)">
+      <div id="imgPreviewBox" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;"></div>
+    </div>
+    <div style="display:flex;gap:8px;justify-content:flex-end;"><button class="btn" onclick="closeModal('memoModal')">취소</button><button class="btn btn-primary" onclick="saveMemo()">저장</button></div>
+  </div>
+</div>
+<div class="lightbox" id="lightbox" onclick="this.classList.remove('open')"><img id="lightboxImg" src="" alt=""></div>
+
+<script>
+// ══════════════════════════════════════════
+// FIREBASE INIT (compat SDK - no module needed)
+// ══════════════════════════════════════════
+const firebaseConfig = {
+  apiKey: "AIzaSyD_YPxRrnwydYR9zRj4CNExYLW_sshseBE",
+  authDomain: "minam-yangpa.firebaseapp.com",
+  projectId: "minam-yangpa",
+  storageBucket: "minam-yangpa.firebasestorage.app",
+  messagingSenderId: "408069353129",
+  appId: "1:408069353129:web:d2b6f79ed74f3315b083b8"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
+// ══════════════════════════════════════════
+// STATE
+// ══════════════════════════════════════════
+var currentPage = 'schedule';
+var isDark = localStorage.getItem('mnyo_dark') === 'true';
+var loginMode = 'minam';
+var currentHoldingUser = 'minam';
+var currentMemoUser = 'minam';
+var currentWatchGroup = null;
+var memoImages = [];
+// sessionStorage에서 로그인 상태 복원 (탭 닫기 전까지 유지)
+var session = {
+  editor: false,
+  minam:  sessionStorage.getItem('login_minam')  === 'true',
+  yangpa: sessionStorage.getItem('login_yangpa') === 'true'
+};
+var priceCache = {};
+var cache = {
+  schedules: [], watchGroups: [], recommends: [], issues: [],
+  holdings_minam: [], holdings_yangpa: [],
+  memos_minam: [], memos_yangpa: []
+};
+
+// ══════════════════════════════════════════
+// FIREBASE HELPERS
+// ══════════════════════════════════════════
+function setSyncDot(s) {
+  var el = document.getElementById('syncDot');
+  if (el) el.textContent = s === 'ok' ? '🟢' : s === 'err' ? '🔴' : '⏳';
+}
+
+function fbAdd(col, data) {
+  return db.collection(col).add(data);
+}
+function fbDel(col, id) {
+  return db.collection(col).doc(id).delete();
+}
+function fbSet(col, id, data) {
+  return db.collection(col).doc(id).set(data, { merge: true });
+}
+function fbGetAll(col) {
+  return db.collection(col).get().then(function(snap) {
+    return snap.docs.map(function(d) { return Object.assign({ id: d.id }, d.data()); });
+  });
+}
+
+// 실시간 리스너 (공개 데이터)
+function setupListeners() {
+  var publicCols = ['schedules', 'watchGroups', 'recommends', 'issues'];
+  publicCols.forEach(function(col) {
+    db.collection(col).onSnapshot(function(snap) {
+      cache[col] = snap.docs.map(function(d) { return Object.assign({ id: d.id }, d.data()); });
+      setSyncDot('ok');
+      if (col === 'schedules' && currentPage === 'schedule') renderSchedule();
+      if (col === 'watchGroups' && currentPage === 'watchlist') renderWatchlist();
+      if (col === 'recommends' && currentPage === 'recommend') renderRecommend();
+      if (col === 'issues' && currentPage === 'issues') renderIssues();
+    }, function() { setSyncDot('err'); });
+  });
+}
+
+// ══════════════════════════════════════════
+// THEME
+// ══════════════════════════════════════════
+function applyTheme() {
+  document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
+  var btn = document.getElementById('themeBtn');
+  if (btn) btn.textContent = isDark ? '☀️' : '🌙';
+}
+function toggleTheme() {
+  isDark = !isDark;
+  localStorage.setItem('mnyo_dark', isDark);
+  applyTheme();
+}
+
+// ══════════════════════════════════════════
+// NAVIGATION
+// ══════════════════════════════════════════
+function showPage(id, btn) {
+  document.querySelectorAll('.page').forEach(function(p) { p.classList.remove('active'); });
+  document.querySelectorAll('.nav-btn').forEach(function(b) { b.classList.remove('active'); });
+  document.getElementById('page-' + id).classList.add('active');
+  if (btn) btn.classList.add('active');
+  currentPage = id;
+  if (id === 'schedule') renderSchedule();
+  if (id === 'watchlist') renderWatchlist();
+  if (id === 'holdings') renderHoldings();
+  if (id === 'recommend') renderRecommend();
+  if (id === 'issues') renderIssues();
+  if (id === 'memo') renderMemos(currentMemoUser);
+  if (id === 'supply') renderSupply();
+}
+
+// ══════════════════════════════════════════
+// AUTH
+// ══════════════════════════════════════════
+function hashPw(pw) {
+  var h = 0;
+  for (var i = 0; i < pw.length; i++) h = Math.imul(31, h) + pw.charCodeAt(i) | 0;
+  return h.toString(16);
+}
+function openLogin() {
+  document.getElementById('loginPw').value = '';
+  document.getElementById('setPw').value = '';
+  document.getElementById('loginMsg').textContent = '';
+  document.getElementById('setPwMsg').textContent = '';
+  openModal('loginModal');
+}
+function setLoginMode(mode, btn) {
+  loginMode = mode;
+  document.querySelectorAll('#loginTabs .tab').forEach(function(t) { t.classList.remove('active'); });
+  if (btn) btn.classList.add('active');
+  var labels = { minam: '미남 비밀번호', yangpa: '양파 비밀번호' };
+  document.getElementById('loginLabel').textContent = labels[mode] || '비밀번호';
+}
+function doLogin() {
+  var pw = document.getElementById('loginPw').value.trim();
+  if (!pw) { document.getElementById('loginMsg').textContent = '비밀번호를 입력하세요'; return; }
+  db.collection('passwords').doc(loginMode).get().then(function(doc) {
+    var stored = doc.exists ? doc.data().hash : localStorage.getItem('pw_' + loginMode);
+    if (!stored) { document.getElementById('loginMsg').textContent = '비밀번호가 설정되지 않았습니다'; return; }
+    if (hashPw(pw) === stored) {
+      session[loginMode] = true;
+      closeModal('loginModal');
+      document.getElementById('loginBtn').textContent = '✅';
+      showToast((loginMode === 'editor' ? '편집자' : loginMode === 'minam' ? '미남' : '양파') + '로 로그인했습니다');
+      if (loginMode === 'minam' || loginMode === 'editor') {
+        fbGetAll('holdings_minam').then(function(d) { cache.holdings_minam = d; renderHoldings(); });
+        fbGetAll('memos_minam').then(function(d) { cache.memos_minam = d; renderMemos('minam'); });
+      }
+      if (loginMode === 'yangpa' || loginMode === 'editor') {
+        fbGetAll('holdings_yangpa').then(function(d) { cache.holdings_yangpa = d; renderHoldings(); });
+        fbGetAll('memos_yangpa').then(function(d) { cache.memos_yangpa = d; renderMemos('yangpa'); });
+      }
+    } else {
+      document.getElementById('loginMsg').textContent = '비밀번호가 틀렸습니다';
+    }
+  }).catch(function() { document.getElementById('loginMsg').textContent = '연결 오류. 잠시 후 다시 시도하세요.'; });
+}
+function setPassword() {
+  var pw = document.getElementById('setPw').value.trim();
+  if (!pw || pw.length < 4) { document.getElementById('setPwMsg').style.color = 'var(--danger)'; document.getElementById('setPwMsg').textContent = '4자 이상 입력하세요'; return; }
+  db.collection('passwords').doc(loginMode).get().then(function(doc) {
+    if (doc.exists) { document.getElementById('setPwMsg').style.color = 'var(--danger)'; document.getElementById('setPwMsg').textContent = '이미 설정되어 있습니다'; return; }
+    db.collection('passwords').doc(loginMode).set({ hash: hashPw(pw) }).then(function() {
+      document.getElementById('setPwMsg').style.color = 'var(--success)'; document.getElementById('setPwMsg').textContent = '비밀번호가 설정됐습니다! ✅';
+    });
+  });
+}
+function requireEditor(fn) {
+  var args = Array.prototype.slice.call(arguments, 1);
+  if (!session.minam && !session.yangpa) { showToast('로그인이 필요합니다 🔐'); openLogin(); return; }
+  fn.apply(null, args);
+}
+function requireUser(user, fn) {
+  var args = Array.prototype.slice.call(arguments, 2);
+  if (!session[user]) {
+    openLogin();
+    setTimeout(function() {
+      var tabs = document.querySelectorAll('#loginTabs .tab');
+      var idx = user === 'minam' ? 0 : 1;
+      loginMode = user;
+      tabs.forEach(function(t){t.classList.remove('active');});
+      if (tabs[idx]) tabs[idx].classList.add('active');
+      document.getElementById('loginLabel').textContent = user === 'minam' ? '미남 비밀번호' : '양파 비밀번호';
+    }, 100);
+    return;
+  }
+  fn.apply(null, args);
+}
+
+// ══════════════════════════════════════════
+// MODAL / TOAST
+// ══════════════════════════════════════════
+function openModal(id) { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+function showToast(msg) {
+  var t = document.createElement('div');
+  t.textContent = msg;
+  Object.assign(t.style, { position: 'fixed', bottom: '24px', left: '50%', transform: 'translateX(-50%)', background: 'var(--text)', color: 'var(--bg)', padding: '10px 20px', borderRadius: '20px', fontSize: '13px', fontWeight: '500', zIndex: '999', transition: 'opacity .3s' });
+  document.body.appendChild(t);
+  setTimeout(function() { t.style.opacity = '0'; setTimeout(function() { t.remove(); }, 300); }, 2200);
+}
+
+// ══════════════════════════════════════════
+// MARKET DATA
+// ══════════════════════════════════════════
+// ══════════════════════════════════════════
+// SCHEDULE
+// ══════════════════════════════════════════
+var FIXED_SCH = {
+  kr: [{d:'05',title:'한국은행 금통위 의사록 공개'},{d:'10',title:'수출입 동향 (관세청)'},{d:'15',title:'수출입물가지수'}],
+  us: [{d:'03',title:'ISM 제조업 PMI'},{d:'05',title:'ADP 민간고용'},{d:'05',title:'ISM 서비스업 PMI'},{d:'07',title:'비농업 고용지표 (NFP)'},{d:'10',title:'CPI (소비자물가지수)'},{d:'11',title:'PPI (생산자물가지수)'},{d:'16',title:'연준 베이지북'},{d:'17',title:'소매판매'},{d:'28',title:'GDP 성장률 (잠정)'},{d:'30',title:'PCE (개인소비지출)'}]
+};
+var DAYS = ['일','월','화','수','목','금','토'];
+
+function schHtml(s, yr, mo, fixed) {
+  var day = new Date(yr + '-' + mo + '-' + s.d).getDay();
+  return '<div class="schedule-item"><div class="schedule-date"><div class="schedule-date-num">' + s.d + '일</div><div class="schedule-date-day">' + DAYS[day] + '요일</div></div><div style="flex:1;"><div style="font-weight:600;font-size:13px;">' + s.title + '</div>' + (s.desc ? '<div style="font-size:12px;color:var(--text3);">' + s.desc + '</div>' : '') + '</div>' + (fixed ? '<span class="badge badge-info">자동</span>' : '<button class="btn btn-sm btn-danger" onclick="requireEditor(deleteSchedule,\'' + s.id + '\')">삭제</button>') + '</div>';
+}
+
+function renderSchedule() {
+  var sel = document.getElementById('scheduleMonth');
+  if (!sel) return;
+  var month = sel.value;
+  var parts = month.split('-'), yr = parts[0], mo = parts[1];
+
+  var customs = cache.schedules.filter(function(s){ return s.month === month; });
+  var customKr = customs.filter(function(s){ return s.type === 'kr'; });
+  var customUs = customs.filter(function(s){ return s.type === 'us'; });
+  var customEtc = customs.filter(function(s){ return s.type === 'custom' || !s.type; });
+
+  // 국내: 고정 + 직접입력(국내) 합쳐서 날짜순
+  var krAll = FIXED_SCH.kr.map(function(s){ return Object.assign({}, s, {fixed:true}); })
+    .concat(customKr.map(function(s){ return Object.assign({}, s, {fixed:false}); }))
+    .concat(customEtc.map(function(s){ return Object.assign({}, s, {fixed:false}); }));
+  krAll.sort(function(a,b){ return a.d.localeCompare(b.d); });
+
+  // 미국: 고정 + 직접입력(미국) 합쳐서 날짜순
+  var usAll = FIXED_SCH.us.map(function(s){ return Object.assign({}, s, {fixed:true}); })
+    .concat(customUs.map(function(s){ return Object.assign({}, s, {fixed:false}); }));
+  usAll.sort(function(a,b){ return a.d.localeCompare(b.d); });
+
+  document.getElementById('krScheduleList').innerHTML = krAll.length ? krAll.map(function(s){ return schHtml(s, yr, mo, s.fixed); }).join('') : '<div class="loading-text">없음</div>';
+  document.getElementById('usScheduleList').innerHTML = usAll.length ? usAll.map(function(s){ return schHtml(s, yr, mo, s.fixed); }).join('') : '<div class="loading-text">없음</div>';
+}
+
+function openAddSchedule() {
+  ['schDate','schTitle','schDesc'].forEach(function(id) { document.getElementById(id).value = ''; });
+  document.getElementById('schType').value = 'custom';
+  openModal('scheduleModal');
+}
+function saveSchedule() {
+  var date = document.getElementById('schDate').value;
+  var title = document.getElementById('schTitle').value.trim();
+  if (!date || !title) { showToast('날짜와 제목을 입력하세요'); return; }
+  var parts = date.split('-');
+  fbAdd('schedules', { month: parts[0]+'-'+parts[1], d: parts[2], title: title, desc: document.getElementById('schDesc').value.trim(), type: document.getElementById('schType').value, createdAt: Date.now() })
+    .then(function() { closeModal('scheduleModal'); showToast('일정이 저장됐습니다'); });
+}
+function deleteSchedule(id) {
+  if (!confirm('삭제하시겠습니까?')) return;
+  fbDel('schedules', id).then(function() { showToast('삭제됐습니다'); });
+}
+
+// ══════════════════════════════════════════
+// WATCHLIST
+// ══════════════════════════════════════════
+function openAddGroup() { document.getElementById('groupName').value = ''; openModal('groupModal'); }
+function saveGroup() {
+  var name = document.getElementById('groupName').value.trim();
+  if (!name) { showToast('그룹명을 입력하세요'); return; }
+  fbAdd('watchGroups', { name: name, stocks: [], createdAt: Date.now() }).then(function() { closeModal('groupModal'); });
+}
+function openAddWatchStock(groupId) {
+  currentWatchGroup = groupId;
+  document.getElementById('watchCode').value = '';
+  document.getElementById('watchName').value = '';
+  openModal('watchModal');
+}
+function saveWatchStock() {
+  var code = document.getElementById('watchCode').value.trim();
+  var name = document.getElementById('watchName').value.trim();
+  if (!code || !name) { showToast('코드와 종목명을 입력하세요'); return; }
+  var g = cache.watchGroups.find(function(g) { return g.id === currentWatchGroup; });
+  if (!g) return;
+  var stocks = (g.stocks || []).concat([{ id: Date.now().toString(), code: code, name: name }]);
+  fbSet('watchGroups', currentWatchGroup, { stocks: stocks }).then(function() { closeModal('watchModal'); });
+}
+function deleteGroup(id) {
+  if (!confirm('그룹을 삭제하시겠습니까?')) return;
+  fbDel('watchGroups', id);
+}
+function deleteWatchStock(groupId, stockId) {
+  var g = cache.watchGroups.find(function(g) { return g.id === groupId; });
+  if (!g) return;
+  var stocks = (g.stocks || []).filter(function(s) { return s.id !== stockId; });
+  fbSet('watchGroups', groupId, { stocks: stocks });
+}
+function renderWatchlist() {
+  var groups = cache.watchGroups;
+  var container = document.getElementById('watchlistContainer');
+  if (!groups.length) { container.innerHTML = '<div class="loading-text">등록된 관심종목 그룹이 없습니다<br><small>편집자 로그인 후 그룹을 추가하세요</small></div>'; return; }
+  var allCodes = [];
+  groups.forEach(function(g) { (g.stocks || []).forEach(function(s) { if (s.code) allCodes.push(s.code + '.KS'); }); });
+  function render() {
+    container.innerHTML = groups.map(function(g) {
+      var sh = (g.stocks || []).length ? (g.stocks).map(function(s) {
+        var d = priceCache[s.code + '.KS'];
+        var price = d ? fmtNum(d.price) + '원' : '—';
+        var pct = d ? d.changePct : null;
+        var cls = 'flat', sign = '';
+        if (pct != null) { if (pct > 0) { cls = 'up'; sign = '+'; } else if (pct < 0) cls = 'down'; }
+        return '<div class="stock-row"><div style="flex:1;"><div style="font-weight:600;">' + s.name + '</div><div class="stock-code">' + s.code + '</div></div><div style="text-align:right;margin-right:16px;"><div style="font-weight:700;font-size:15px;">' + price + '</div><div style="font-size:12px;"><span class="' + cls + '">' + (pct != null ? sign + fmtNum(pct, 2) + '%' : '—') + '</span></div></div><button class="btn btn-sm" onclick="requireEditor(deleteWatchStock,\'' + g.id + '\',\'' + s.id + '\')">삭제</button></div>';
+      }).join('') : '<div class="loading-text" style="padding:12px;">종목 없음</div>';
+      return '<div class="card mb-16"><div class="group-header"><div class="group-name">📂 ' + g.name + ' <span style="color:var(--text3);font-weight:400;font-size:12px;">(' + (g.stocks || []).length + '종목)</span></div><div style="display:flex;gap:8px;"><button class="btn btn-sm" onclick="requireEditor(openAddWatchStock,\'' + g.id + '\')">+ 종목추가</button><button class="btn btn-sm btn-danger" onclick="requireEditor(deleteGroup,\'' + g.id + '\')">그룹삭제</button></div></div>' + sh + '</div>';
+    }).join('');
+  }
+  if (allCodes.length) { fetchYahoo(allCodes).then(render); } else { render(); }
+}
+
+// ══════════════════════════════════════════
+// HOLDINGS
+// ══════════════════════════════════════════
+function showHoldingTab(user, btn) {
+  ['minam','yangpa'].forEach(function(u) { document.getElementById('holding-' + u).style.display = u === user ? 'block' : 'none'; });
+  document.querySelectorAll('#page-holdings .tab').forEach(function(t) { t.classList.remove('active'); });
+  if (btn) btn.classList.add('active');
+  currentHoldingUser = user;
+  renderHoldings();
+}
+function openAddHolding(user) {
+  currentHoldingUser = user;
+  document.getElementById('holdingModalTitle').textContent = (user === 'minam' ? '🧑 미남' : '🧅 양파') + ' 종목 추가';
+  ['hName','hCode','hSector','hBuyPrice','hQty'].forEach(function(id) { document.getElementById(id).value = ''; });
+  openModal('holdingModal');
+}
+function saveHolding() {
+  var name = document.getElementById('hName').value.trim();
+  var code = document.getElementById('hCode').value.trim();
+  var sector = document.getElementById('hSector').value.trim();
+  var buyPrice = parseFloat(document.getElementById('hBuyPrice').value);
+  var qty = parseInt(document.getElementById('hQty').value);
+  if (!name || !buyPrice || !qty) { showToast('종목명, 매수가, 수량은 필수입니다'); return; }
+  var col = 'holdings_' + currentHoldingUser;
+  fbAdd(col, { name: name, code: code, sector: sector, buyPrice: buyPrice, qty: qty, createdAt: Date.now() }).then(function(ref) {
+    cache[col].push({ id: ref.id, name: name, code: code, sector: sector, buyPrice: buyPrice, qty: qty });
+    closeModal('holdingModal'); renderHoldings(); showToast('종목이 추가됐습니다');
+  });
+}
+function deleteHolding(user, id) {
+  if (!confirm('삭제하시겠습니까?')) return;
+  var col = 'holdings_' + user;
+  fbDel(col, id).then(function() {
+    cache[col] = cache[col].filter(function(h) { return h.id !== id; });
+    renderHoldings();
+  });
+}
+function renderHoldings() {
+  ['minam','yangpa'].forEach(function(user) {
+    var el = document.getElementById(user + '-holding-content');
+    // 보유종목은 누구나 볼 수 있음 (편집만 본인)
+    var holdings = cache['holdings_' + user];
+    if (!holdings.length) { el.innerHTML = '<div class="card"><div style="text-align:center;color:var(--text3);padding:24px;">등록된 종목 없음</div></div>'; return; }
+    var codes = holdings.filter(function(h) { return h.code; }).map(function(h) { return h.code + '.KS'; });
+    function render() {
+      var totalP = 0, totalC = 0, rows = '';
+      holdings.forEach(function(h) {
+        var d = h.code ? priceCache[h.code + '.KS'] : null;
+        var cur = d ? d.price : null;
+        var principal = h.buyPrice * h.qty;
+        var curVal = cur ? cur * h.qty : null;
+        var profit = curVal != null ? curVal - principal : null;
+        var pct = profit != null ? (profit / principal * 100) : null;
+        totalP += principal; if (curVal) totalC += curVal;
+        var pc = profit == null ? '' : profit > 0 ? 'up' : profit < 0 ? 'down' : 'flat';
+        rows += '<tr><td class="td-bold">' + h.name + '</td><td><span class="pill">' + (h.sector || '—') + '</span></td><td class="td-num">' + fmtNum(h.buyPrice) + '원</td><td class="td-num">' + h.qty.toLocaleString() + '주</td><td class="td-num">' + fmtNum(principal) + '원</td><td class="td-num">' + (cur ? fmtNum(cur) + '원' : '—') + '</td><td class="td-num">' + (curVal ? fmtNum(curVal) + '원' : '—') + '</td><td class="td-num ' + pc + '">' + (profit != null ? (profit >= 0 ? '+' : '') + fmtNum(profit) + '원' : '—') + '</td><td class="td-num ' + pc + '">' + (pct != null ? (pct >= 0 ? '+' : '') + fmtNum(pct, 2) + '%' : '—') + '</td><td><button class="btn btn-sm btn-danger" onclick="requireUser(\'' + user + '\',deleteHolding,\'' + user + '\',\'' + h.id + '\')">삭제</button></td></tr>';
+      });
+      var tp = totalC - totalP, tpct = totalP > 0 ? (tp / totalP * 100) : 0;
+      var tc = tp >= 0 ? 'up' : 'down';
+      el.innerHTML = '<div class="card"><div class="tbl-wrap"><table><thead><tr><th>종목명</th><th>섹터</th><th class="td-num">매수가</th><th class="td-num">수량</th><th class="td-num">원금</th><th class="td-num">현재가</th><th class="td-num">평가금액</th><th class="td-num">수익금</th><th class="td-num">수익률</th><th></th></tr></thead><tbody>' + rows + '</tbody><tfoot><tr class="total-row"><td class="td-bold">합계</td><td></td><td></td><td class="td-num td-bold">' + holdings.reduce(function(a,h){return a+h.qty;},0).toLocaleString() + '주</td><td class="td-num td-bold">' + fmtNum(totalP) + '원</td><td></td><td class="td-num td-bold">' + (totalC ? fmtNum(totalC)+'원' : '—') + '</td><td class="td-num td-bold ' + tc + '">' + (totalC ? (tp>=0?'+':'') + fmtNum(tp)+'원' : '—') + '</td><td class="td-num td-bold ' + tc + '">' + (totalC ? (tpct>=0?'+':'') + fmtNum(tpct,2)+'%' : '—') + '</td><td></td></tr></tfoot></table></div></div>';
+    }
+    if (codes.length) { fetchYahoo(codes).then(render); } else { render(); }
+  });
+}
+
+// ══════════════════════════════════════════
+// RECOMMEND
+// ══════════════════════════════════════════
+function openAddRecommend() { ['rName','rSector','rBuyPrice','rTarget','rReason'].forEach(function(id){document.getElementById(id).value='';});openModal('recommendModal'); }
+function saveRecommend() {
+  var name = document.getElementById('rName').value.trim();
+  if (!name) { showToast('종목명을 입력하세요'); return; }
+  fbAdd('recommends', { name: name, sector: document.getElementById('rSector').value.trim(), buyPrice: document.getElementById('rBuyPrice').value, target: document.getElementById('rTarget').value, reason: document.getElementById('rReason').value.trim(), date: new Date().toLocaleDateString('ko-KR'), createdAt: Date.now() })
+    .then(function() { closeModal('recommendModal'); showToast('추천종목이 추가됐습니다'); });
+}
+function deleteRecommend(id) {
+  if (!confirm('삭제하시겠습니까?')) return;
+  fbDel('recommends', id);
+}
+function renderRecommend() {
+  var recs = cache.recommends.slice().sort(function(a,b){return (b.createdAt||0)-(a.createdAt||0);});
+  var el = document.getElementById('recommendContainer');
+  if (!recs.length) { el.innerHTML = '<div class="loading-text">등록된 추천종목이 없습니다</div>'; return; }
+  el.innerHTML = '<div class="grid-3">' + recs.map(function(r) {
+    var up = r.buyPrice && r.target ? ((r.target - r.buyPrice) / r.buyPrice * 100).toFixed(1) : null;
+    return '<div class="rec-card"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;"><div><div style="font-weight:700;font-size:15px;">' + r.name + '</div><div style="font-size:12px;color:var(--text3);">' + (r.sector||'') + ' · ' + r.date + '</div></div><button class="btn btn-sm btn-danger" onclick="requireEditor(deleteRecommend,\'' + r.id + '\')">삭제</button></div><div style="display:flex;gap:12px;margin-bottom:12px;font-size:13px;"><div><div style="color:var(--text3);font-size:11px;">매수가</div><div style="font-weight:600;">' + (r.buyPrice ? fmtNum(parseFloat(r.buyPrice))+'원' : '—') + '</div></div><div><div style="color:var(--text3);font-size:11px;">목표가</div><div style="font-weight:600;color:var(--success);">' + (r.target ? fmtNum(parseFloat(r.target))+'원' : '—') + '</div></div>' + (up ? '<div><div style="color:var(--text3);font-size:11px;">기대수익</div><div style="font-weight:700;color:var(--success);">+'+up+'%</div></div>' : '') + '</div>' + (r.reason ? '<div style="font-size:13px;color:var(--text2);line-height:1.7;border-top:1px solid var(--border);padding-top:10px;">' + r.reason + '</div>' : '') + '</div>';
+  }).join('') + '</div>';
+}
+
+// ══════════════════════════════════════════
+// ISSUES
+// ══════════════════════════════════════════
+var issueFiles = [];
+function openAddIssue() {
+  ['issueTitle','issueBody','issueStocks'].forEach(function(id){document.getElementById(id).value='';});
+  document.getElementById('issueDate').value = new Date().toISOString().split('T')[0];
+  issueFiles = [];
+  document.getElementById('issueFilePreview').innerHTML = '';
+  openModal('issueModal');
+}
+function handleIssueFileSelect(e) { Array.from(e.target.files).forEach(readIssueFile); e.target.value=''; }
+function handleIssueFileDrop(e) { e.preventDefault(); document.querySelector('.drop-zone').style.borderColor='var(--border)'; Array.from(e.dataTransfer.files).forEach(readIssueFile); }
+function readIssueFile(file) {
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    issueFiles.push({ name: file.name, type: file.type, data: e.target.result });
+    renderIssueFilePreviews();
+  };
+  reader.readAsDataURL(file);
+}
+function renderIssueFilePreviews() {
+  var box = document.getElementById('issueFilePreview');
+  box.innerHTML = issueFiles.map(function(f, i) {
+    var thumb = f.type.startsWith('image/') ? '<img src="' + f.data + '" style="width:60px;height:50px;object-fit:cover;border-radius:4px;border:1px solid var(--border);">' : '<div style="width:60px;height:50px;background:var(--surface2);border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--text3);text-align:center;padding:4px;">' + f.name.split('.').pop().toUpperCase() + '</div>';
+    return '<div class="img-preview-wrap">' + thumb + '<button class="img-preview-del" onclick="issueFiles.splice(' + i + ',1);renderIssueFilePreviews()">✕</button></div>';
+  }).join('');
+}
+function saveIssue() {
+  var title = document.getElementById('issueTitle').value.trim();
+  if (!title) { showToast('제목을 입력하세요'); return; }
+  fbAdd('issues', {
+    date: document.getElementById('issueDate').value,
+    title: title,
+    body: document.getElementById('issueBody').value.trim(),
+    stocks: document.getElementById('issueStocks').value.trim(),
+    files: issueFiles.slice(),
+    createdAt: Date.now()
+  }).then(function() { issueFiles=[]; closeModal('issueModal'); showToast('이슈가 등록됐습니다'); });
+}
+function deleteIssue(id) {
+  if (!confirm('삭제하시겠습니까?')) return;
+  fbDel('issues', id);
+}
+function renderIssues() {
+  var issues = cache.issues.slice().sort(function(a,b){return (b.createdAt||0)-(a.createdAt||0);});
+  var el = document.getElementById('issueContainer');
+  if (!issues.length) { el.innerHTML = '<div class="loading-text">등록된 이슈가 없습니다</div>'; return; }
+  el.innerHTML = issues.map(function(i) {
+    var tags = i.stocks ? i.stocks.split(',').map(function(s){return '<span class="badge badge-info">'+s.trim()+'</span>';}).join('') : '';
+    return '<div class="issue-card"><div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;"><div><div style="font-weight:700;font-size:15px;">' + i.title + '</div><div style="font-size:12px;color:var(--text3);">📅 ' + i.date + '</div></div><button class="btn btn-sm btn-danger" onclick="requireEditor(deleteIssue,\'' + i.id + '\')">삭제</button></div>' + (i.body ? '<div style="font-size:13px;color:var(--text2);line-height:1.7;margin-bottom:10px;">' + i.body.replace(/\n/g,'<br>') + '</div>' : '') + (tags ? '<div class="issue-stocks">예상종목: ' + tags + '</div>' : '') + '</div>';
+  }).join('');
+}
+
+// ══════════════════════════════════════════
+// MEMO
+// ══════════════════════════════════════════
+function showMemoTab(user, btn) {
+  ['minam','yangpa'].forEach(function(u) { document.getElementById('memo-' + u).style.display = u === user ? 'block' : 'none'; });
+  document.querySelectorAll('#page-memo .tab').forEach(function(t) { t.classList.remove('active'); });
+  if (btn) btn.classList.add('active');
+  currentMemoUser = user;
+  renderMemos(user);
+}
+function openAddMemo(user) {
+  currentMemoUser = user; memoImages = [];
+  document.getElementById('memoModalTitle').textContent = (user === 'minam' ? '🧑 미남' : '🧅 양파') + ' 일기 작성';
+  ['memoTitle','memoContent'].forEach(function(id){document.getElementById(id).value='';});
+  document.getElementById('memoDate').value = new Date().toISOString().split('T')[0];
+  document.getElementById('memoEmoji').value = '';
+  document.getElementById('imgPreviewBox').innerHTML = '';
+  document.querySelectorAll('.emoji-btn').forEach(function(b){b.classList.remove('selected');});
+  document.querySelectorAll('.tag-btn').forEach(function(b){b.classList.remove('selected');});
+  openModal('memoModal');
+}
+function selectEmoji(btn, emoji) {
+  document.querySelectorAll('.emoji-btn').forEach(function(b){b.classList.remove('selected');});
+  btn.classList.add('selected');
+  document.getElementById('memoEmoji').value = emoji;
+}
+function handleImgSelect(e) { Array.from(e.target.files).forEach(readImgFile); e.target.value = ''; }
+function handleImgDrop(e) { e.preventDefault(); document.querySelector('.drop-zone').style.borderColor='var(--border)'; Array.from(e.dataTransfer.files).filter(function(f){return f.type.startsWith('image/');}).forEach(readImgFile); }
+function readImgFile(file) { var r = new FileReader(); r.onload = function(e) { memoImages.push(e.target.result); renderImgPreviews(); }; r.readAsDataURL(file); }
+function renderImgPreviews() {
+  document.getElementById('imgPreviewBox').innerHTML = memoImages.map(function(src, i) {
+    return '<div class="img-preview-wrap"><img src="' + src + '" alt="미리보기"><button class="img-preview-del" onclick="memoImages.splice(' + i + ',1);renderImgPreviews()">✕</button></div>';
+  }).join('');
+}
+function saveMemo() {
+  var title = document.getElementById('memoTitle').value.trim();
+  var content = document.getElementById('memoContent').value.trim();
+  if (!title && !content) { showToast('제목이나 내용을 입력하세요'); return; }
+  var tags = Array.from(document.querySelectorAll('.tag-btn.selected')).map(function(b){return b.textContent.trim().replace(/^.\s/,'');});
+  var col = 'memos_' + currentMemoUser;
+  fbAdd(col, { date: document.getElementById('memoDate').value, title: title, content: content, emoji: document.getElementById('memoEmoji').value, tags: tags, images: memoImages.slice(), createdAt: Date.now() })
+    .then(function(ref) {
+      cache[col].unshift({ id: ref.id, date: document.getElementById('memoDate').value, title: title, content: content, emoji: document.getElementById('memoEmoji').value, tags: tags, images: memoImages.slice() });
+      memoImages = [];
+      closeModal('memoModal');
+      renderMemos(currentMemoUser);
+      showToast('일기가 저장됐습니다 ✍️');
+    });
+}
+function deleteMemo(user, id) {
+  if (!confirm('삭제하시겠습니까?')) return;
+  var col = 'memos_' + user;
+  fbDel(col, id).then(function() {
+    cache[col] = cache[col].filter(function(m){return m.id !== id;});
+    renderMemos(user);
+  });
+}
+function renderMemos(user) {
+  var el = document.getElementById(user + 'MemoList');
+  if (!session[user]) {
+    el.innerHTML = '<div class="private-lock">🔒<div>' + (user==='minam'?'🧑 미남':'🧅 양파') + ' 로그인 후 확인 가능합니다</div><button class="btn btn-primary" style="margin-top:8px;" onclick="openLogin()">로그인</button></div>';
+    return;
+  }
+  var search = (document.getElementById(user+'MemoSearch')||{value:''}).value.toLowerCase();
+  var from = (document.getElementById(user+'MemoDateFrom')||{value:''}).value;
+  var to = (document.getElementById(user+'MemoDateTo')||{value:''}).value;
+  var tag = (document.getElementById(user+'MemoTagFilter')||{value:''}).value;
+  var all = cache['memos_'+user].slice().sort(function(a,b){return (b.createdAt||0)-(a.createdAt||0);});
+  var memos = all.filter(function(m) {
+    if (search && !((m.title||'').toLowerCase().includes(search)||(m.content||'').toLowerCase().includes(search))) return false;
+    if (from && m.date < from) return false;
+    if (to && m.date > to) return false;
+    if (tag && !(m.tags||[]).includes(tag)) return false;
+    return true;
+  });
+  if (!memos.length) { el.innerHTML = '<div class="loading-text">' + (all.length ? '검색 결과가 없습니다' : '작성된 일기가 없습니다') + '</div>'; return; }
+  el.innerHTML = memos.map(function(m) {
+    var tagsHtml = (m.tags||[]).map(function(t){return '<span class="memo-tag">'+t+'</span>';}).join('');
+    var imgs = (m.images||[]).map(function(src){return '<img src="'+src+'" alt="첨부" onclick="openLightbox(\''+src+'\')">';}).join('');
+    return '<div class="memo-card"><div class="memo-card-header"><div class="memo-emoji">'+(m.emoji||'📝')+'</div><div class="memo-meta"><div class="memo-title-text">'+(m.title||'(제목 없음)')+'</div><div class="memo-date-line">📅 '+m.date+'</div></div><div class="memo-tags">'+tagsHtml+'</div></div>'+(m.content?'<div class="memo-body">'+m.content.replace(/\n/g,'<br>')+'</div>':'')+(imgs?'<div class="memo-images">'+imgs+'</div>':'')+'<div class="memo-footer"><button class="btn btn-sm btn-danger" onclick="requireUser(\''+user+'\',deleteMemo,\''+user+'\',\''+m.id+'\')">삭제</button></div></div>';
+  }).join('');
+}
+function openLightbox(src) { document.getElementById('lightboxImg').src = src; document.getElementById('lightbox').classList.add('open'); }
+
+// ══════════════════════════════════════════
+// SUPPLY CHECK (수급체크)
+// ══════════════════════════════════════════
+var supplyTabState = { foreign: 'buy', institute: 'buy' };
+
+function showSupplyTab(group, type, btn) {
+  supplyTabState[group] = type;
+  document.getElementById(group+'-buy-list').style.display = type==='buy' ? 'block' : 'none';
+  document.getElementById(group+'-sell-list').style.display = type==='sell' ? 'block' : 'none';
+  var tabs = btn.closest('.tabs');
+  if (tabs) tabs.querySelectorAll('.tab').forEach(function(t){t.classList.remove('active');});
+  btn.classList.add('active');
+}
+
+function openAddSupply() {
+  document.getElementById('supplyDate').value = new Date().toISOString().split('T')[0];
+  ['supplyStock','supplyAmount','supplyMemo'].forEach(function(id){document.getElementById(id).value='';});
+  document.getElementById('supplyType').value = 'foreign_buy';
+  openModal('supplyModal');
+}
+
+function saveSupply() {
+  var date = document.getElementById('supplyDate').value;
+  var type = document.getElementById('supplyType').value;
+  var stock = document.getElementById('supplyStock').value.trim();
+  var amount = document.getElementById('supplyAmount').value;
+  var memo = document.getElementById('supplyMemo').value.trim();
+  if (!date || !stock || !amount) { showToast('날짜, 종목, 금액은 필수입니다'); return; }
+  fbAdd('supply', { date:date, type:type, stock:stock, amount:parseFloat(amount), memo:memo, createdAt:Date.now() })
+    .then(function(){ closeModal('supplyModal'); renderSupply(); showToast('수급 정보가 저장됐습니다'); });
+}
+
+function deleteSupply(id) {
+  if (!confirm('삭제하시겠습니까?')) return;
+  fbDel('supply', id).then(function(){ renderSupply(); });
+}
+
+function renderSupply() {
+  var dateFilter = (document.getElementById('supplyDateFilter') || {value:''}).value;
+  fbGetAll('supply').then(function(items) {
+    if (dateFilter) items = items.filter(function(x){ return x.date === dateFilter; });
+    items.sort(function(a,b){ return b.date > a.date ? 1 : b.date < a.date ? -1 : (b.createdAt||0)-(a.createdAt||0); });
+    var g = { foreign_buy:[], foreign_sell:[], institute_buy:[], institute_sell:[] };
+    items.forEach(function(x){ if (g[x.type]) g[x.type].push(x); });
+    function makeTable(arr, color) {
+      if (!arr.length) return '<div class="loading-text">데이터 없음</div>';
+      var rows = '';
+      arr.forEach(function(x) {
+        var btn = document.createElement('button');
+        btn.className = 'btn btn-sm btn-danger';
+        btn.textContent = '삭제';
+        btn.setAttribute('data-id', x.id);
+        rows += '<tr><td style="color:var(--text3);font-size:12px;">' + x.date + '</td><td class="td-bold">' + x.stock + '</td><td class="td-num" style="color:' + color + ';font-weight:700;">' + x.amount.toLocaleString() + '억</td><td style="font-size:12px;color:var(--text3);">' + (x.memo||'') + '</td><td><button class="btn btn-sm btn-danger" data-id="' + x.id + '" onclick="supplyDel(this)">삭제</button></td></tr>';
+      });
+      return '<div class="tbl-wrap"><table><thead><tr><th>날짜</th><th>종목</th><th class="td-num">금액(억)</th><th>메모</th><th></th></tr></thead><tbody>' + rows + '</tbody></table></div>';
+    }
+    document.getElementById('foreign-buy-list').innerHTML    = makeTable(g.foreign_buy,    'var(--danger)');
+    document.getElementById('foreign-sell-list').innerHTML   = makeTable(g.foreign_sell,   'var(--accent)');
+    document.getElementById('institute-buy-list').innerHTML  = makeTable(g.institute_buy,  'var(--danger)');
+    document.getElementById('institute-sell-list').innerHTML = makeTable(g.institute_sell, 'var(--accent)');
+  });
+}
+function supplyDel(btn) {
+  var id = btn.getAttribute('data-id');
+  requireEditor(deleteSupply, id);
+}
+
+// ══════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════
+function initMonthSelect() {
+  var now = new Date(), yr = now.getFullYear(), mo = String(now.getMonth()+1).padStart(2,'0');
+  var val = yr + '-' + mo;
+  var sel = document.getElementById('scheduleMonth');
+  if (!sel) return;
+  for (var i = 0; i < sel.options.length; i++) { if (sel.options[i].value === val) { sel.options[i].selected = true; break; } }
+}
+
+// 페이지 로드 시 실행
+applyTheme();
+setSyncDot('loading');
+setupListeners();
+initMonthSelect();
+// 보유종목은 로그인 없이도 자동 로드
+fbGetAll('holdings_minam').then(function(d){ cache.holdings_minam = d; });
+fbGetAll('holdings_yangpa').then(function(d){ cache.holdings_yangpa = d; });
+
+// 로그인 상태 복원
+(function restoreLogin() {
+  var restored = [];
+  if (session.minam)  restored.push('minam');
+  if (session.yangpa) restored.push('yangpa');
+  if (!restored.length) return;
+
+  // 버튼 표시 업데이트
+  var primary = session.minam ? 'minam' : 'yangpa';
+  var name = primary === 'minam' ? '🧑 미남' : '🧅 양파';
+  var btn = document.getElementById('loginBtn');
+  if (btn) {
+    btn.textContent = name;
+    btn.style.background = 'var(--success)';
+    btn.style.borderColor = 'var(--success)';
+  }
+
+  // 비공개 데이터 자동 로드
+  if (session.minam) {
+    fbGetAll('memos_minam').then(function(d){ cache.memos_minam = d; });
+  }
+  if (session.yangpa) {
+    fbGetAll('memos_yangpa').then(function(d){ cache.memos_yangpa = d; });
+  }
+})();
+</script>
+</body>
+</html>
