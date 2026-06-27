@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>미남과 양파의 경제적 자유</title>
+<title>제빵과 양파의 경제적 자유</title>
 <!-- Firebase SDKs -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
@@ -11,23 +11,24 @@
 :root{--bg:#f8f9fa;--surface:#fff;--surface2:#f1f3f5;--border:#e0e4e8;--text:#1a1d23;--text2:#4a5568;--text3:#8492a6;--accent:#2563eb;--accent-bg:#eff6ff;--success:#059669;--success-bg:#ecfdf5;--danger:#dc2626;--danger-bg:#fef2f2;--warning:#d97706;--radius:10px;--radius-sm:6px;--shadow:0 1px 3px rgba(0,0,0,.08);--shadow-md:0 4px 12px rgba(0,0,0,.10);--font:'Pretendard',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;}
 [data-theme="dark"]{--bg:#0f1117;--surface:#1a1d2e;--surface2:#252837;--border:#2e3248;--text:#e8eaf0;--text2:#9ba3bf;--text3:#5a6380;--accent:#60a5fa;--accent-bg:#1e2a3d;--success:#34d399;--success-bg:#0d2418;--danger:#f87171;--danger-bg:#2d1010;--warning:#fbbf24;--shadow:0 1px 3px rgba(0,0,0,.3);--shadow-md:0 4px 12px rgba(0,0,0,.4);}
 *{margin:0;padding:0;box-sizing:border-box;}
-body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh;font-size:14px;line-height:1.6;transition:background .3s,color .3s;}
-header{background:var(--surface);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:100;box-shadow:var(--shadow);}
-.header-inner{max-width:1400px;margin:0 auto;padding:0 20px;display:flex;align-items:center;gap:16px;height:60px;}
-.logo{font-size:16px;font-weight:700;background:linear-gradient(135deg,#2563eb,#7c3aed);-webkit-background-clip:text;-webkit-text-fill-color:transparent;white-space:nowrap;flex-shrink:0;}
+body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh;font-size:14px;line-height:1.6;transition:background .3s,color .3s;-webkit-font-smoothing:antialiased;}
+header{background:var(--surface);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:100;box-shadow:0 1px 0 var(--border),0 2px 8px rgba(0,0,0,.04);}
+.header-inner{max-width:1400px;margin:0 auto;padding:0 24px;display:flex;align-items:center;justify-content:space-between;gap:8px;height:58px;}
+.logo{font-size:15px;font-weight:800;background:linear-gradient(135deg,#3b5bdb 0%,#7048e8 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;white-space:nowrap;flex-shrink:0;letter-spacing:-0.3px;}
 nav{display:flex;gap:2px;flex:1;overflow-x:auto;}nav::-webkit-scrollbar{display:none;}
-.nav-btn{padding:6px 12px;border-radius:var(--radius-sm);border:none;background:transparent;cursor:pointer;color:var(--text2);font-size:13px;font-weight:500;white-space:nowrap;transition:all .15s;font-family:var(--font);}
+.nav-btn{padding:6px 14px;border-radius:20px;border:none;background:transparent;cursor:pointer;color:var(--text2);font-size:13px;font-weight:500;white-space:nowrap;transition:all .2s;font-family:var(--font);}
 .nav-btn:hover{background:var(--surface2);color:var(--text);}
-.nav-btn.active{background:var(--accent-bg);color:var(--accent);font-weight:600;}
+.nav-btn.active{background:var(--accent);color:#fff;font-weight:600;box-shadow:0 2px 8px rgba(59,91,219,.3);}
 .header-actions{display:flex;gap:8px;align-items:center;flex-shrink:0;}
 .icon-btn{width:34px;height:34px;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--surface);cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--text2);font-size:16px;transition:all .15s;}
 .icon-btn:hover{background:var(--surface2);}
 .sync-dot{font-size:12px;}
 main{max-width:1400px;margin:0 auto;padding:24px 20px;}
 .page{display:none;}.page.active{display:block;}
-.card{background:var(--surface);border-radius:var(--radius);border:1px solid var(--border);padding:20px;box-shadow:var(--shadow);}
-.card-title{font-size:13px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:14px;}
-.section-title{font-size:16px;font-weight:700;color:var(--text);margin-bottom:12px;}
+.card{background:var(--surface);border-radius:var(--radius);border:1px solid var(--border);padding:22px 24px;box-shadow:var(--shadow);transition:box-shadow .2s;}
+.card:hover{box-shadow:var(--shadow-md);}
+.card-title{font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:16px;display:flex;align-items:center;gap:6px;}
+.section-title{font-size:17px;font-weight:800;color:var(--text);margin-bottom:14px;letter-spacing:-0.3px;}
 .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
 .grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;}
 .grid-auto{display:grid;grid-template-columns:repeat(auto-fill,minmax(155px,1fr));gap:12px;}
@@ -40,34 +41,36 @@ main{max-width:1400px;margin:0 auto;padding:24px 20px;}
 .up{color:var(--danger);}.down{color:var(--accent);}.flat{color:var(--text3);}
 .tbl-wrap{overflow-x:auto;}
 table{width:100%;border-collapse:collapse;font-size:13px;}
-th{text-align:left;padding:8px 12px;background:var(--surface2);color:var(--text3);font-weight:600;font-size:11px;text-transform:uppercase;border-bottom:1px solid var(--border);white-space:nowrap;}
-td{padding:10px 12px;border-bottom:1px solid var(--border);}
-tr:last-child td{border-bottom:none;}tr:hover td{background:var(--surface2);}
+th{text-align:left;padding:10px 14px;background:var(--surface2);color:var(--text3);font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:.6px;border-bottom:2px solid var(--border);white-space:nowrap;}
+td{padding:12px 14px;border-bottom:1px solid var(--border);transition:background .1s;}
+tr:last-child td{border-bottom:none;}
+tr:hover td{background:var(--accent-bg);}
 .td-num{text-align:right;font-variant-numeric:tabular-nums;}.td-bold{font-weight:600;}
-.badge{display:inline-block;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:600;}
+.badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;letter-spacing:0.2px;}
 .badge-info{background:var(--accent-bg);color:var(--accent);}
-.btn{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--surface);cursor:pointer;font-size:13px;font-weight:500;color:var(--text2);transition:all .15s;font-family:var(--font);}
-.btn:hover{background:var(--surface2);color:var(--text);}
-.btn-primary{background:var(--accent);color:#fff;border-color:var(--accent);}
-.btn-primary:hover{opacity:.9;color:#fff;}
-.btn-danger{background:var(--danger);color:#fff;border-color:var(--danger);}
-.btn-danger:hover{opacity:.9;}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--surface);cursor:pointer;font-size:13px;font-weight:500;color:var(--text2);transition:all .15s;font-family:var(--font);letter-spacing:-0.1px;}
+.btn:hover{background:var(--surface2);color:var(--text);border-color:var(--text3);}
+.btn-primary{background:linear-gradient(135deg,#3b5bdb,#7048e8);color:#fff;border:none;box-shadow:0 2px 8px rgba(59,91,219,.3);}
+.btn-primary:hover{opacity:.92;color:#fff;box-shadow:0 4px 12px rgba(59,91,219,.4);transform:translateY(-1px);}
+.btn-danger{background:var(--danger);color:#fff;border:none;}
+.btn-danger:hover{opacity:.9;transform:translateY(-1px);}
 .btn-sm{padding:4px 10px;font-size:12px;}
 .form-row{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;}
 .form-group{display:flex;flex-direction:column;gap:5px;}
-.form-group label{font-size:12px;font-weight:600;color:var(--text3);}
-input,select,textarea{padding:7px 11px;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--surface);color:var(--text);font-size:13px;font-family:var(--font);outline:none;transition:border-color .15s;min-width:0;}
-input:focus,select:focus,textarea:focus{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent-bg);}
+.form-group label{font-size:12px;font-weight:700;color:var(--text2);letter-spacing:0.2px;margin-bottom:2px;}
+input,select,textarea{padding:9px 13px;border-radius:var(--radius-sm);border:1.5px solid var(--border);background:var(--surface);color:var(--text);font-size:13px;font-family:var(--font);outline:none;transition:all .15s;min-width:0;}
+input:focus,select:focus,textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-bg);}
+input::placeholder,textarea::placeholder{color:var(--text3);}
 textarea{resize:vertical;min-height:80px;}
-.sec-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px;}
+.sec-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;flex-wrap:wrap;gap:10px;padding-bottom:14px;border-bottom:1px solid var(--border);}
 .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;align-items:center;justify-content:center;padding:20px;}
 .modal-overlay.open{display:flex;}
-.modal{background:var(--surface);border-radius:14px;border:1px solid var(--border);padding:28px;width:100%;max-width:480px;box-shadow:var(--shadow-md);position:relative;max-height:90vh;overflow-y:auto;}
-.modal-title{font-size:16px;font-weight:700;margin-bottom:20px;}
+.modal{background:var(--surface);border-radius:16px;border:1px solid var(--border);padding:28px 28px 24px;width:100%;max-width:480px;box-shadow:var(--shadow-lg);position:relative;max-height:90vh;overflow-y:auto;}
+.modal-title{font-size:17px;font-weight:800;margin-bottom:22px;letter-spacing:-0.3px;color:var(--text);}
 .modal-close{position:absolute;top:16px;right:16px;width:28px;height:28px;border-radius:50%;border:1px solid var(--border);background:var(--surface2);cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;color:var(--text2);}
-.tabs{display:flex;gap:2px;background:var(--surface2);padding:3px;border-radius:var(--radius-sm);width:fit-content;margin-bottom:16px;}
-.tab{padding:6px 16px;border-radius:5px;border:none;background:transparent;cursor:pointer;font-size:13px;font-weight:500;color:var(--text2);transition:all .15s;font-family:var(--font);}
-.tab.active{background:var(--surface);color:var(--text);box-shadow:var(--shadow);}
+.tabs{display:flex;gap:2px;background:var(--surface2);padding:3px;border-radius:10px;width:fit-content;margin-bottom:16px;border:1px solid var(--border);}
+.tab{padding:7px 18px;border-radius:8px;border:none;background:transparent;cursor:pointer;font-size:13px;font-weight:500;color:var(--text3);transition:all .2s;font-family:var(--font);}
+.tab.active{background:var(--surface);color:var(--accent);box-shadow:var(--shadow);font-weight:700;}
 .live-dot{width:7px;height:7px;border-radius:50%;background:var(--success);display:inline-block;animation:pulse 2s infinite;}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
 .loading-text{color:var(--text3);font-size:13px;text-align:center;padding:20px;}
@@ -118,34 +121,102 @@ textarea{resize:vertical;min-height:80px;}
 .img-preview-del{position:absolute;top:-6px;right:-6px;width:18px;height:18px;border-radius:50%;background:var(--danger);color:#fff;border:none;cursor:pointer;font-size:11px;display:flex;align-items:center;justify-content:center;}
 .private-lock{min-height:180px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;color:var(--text3);text-align:center;}
 .drop-zone{border:2px dashed var(--border);border-radius:var(--radius);padding:16px;text-align:center;cursor:pointer;color:var(--text3);font-size:13px;}
-@media(max-width:768px){.grid-2,.grid-3{grid-template-columns:1fr 1fr;}}
-@media(max-width:480px){.grid-2,.grid-3,.grid-auto{grid-template-columns:1fr 1fr;}main{padding:16px 12px;}}
+/* 데스크탑 네비 */
+.desktop-nav{display:flex;gap:2px;padding:0 20px 8px;overflow-x:auto;max-width:1400px;margin:0 auto;}
+.desktop-nav::-webkit-scrollbar{display:none;}
+#hamburgerBtn{display:none;}
+.mobile-nav-btn{display:block;width:100%;text-align:left;padding:10px 12px;border:none;background:transparent;cursor:pointer;font-size:14px;font-family:var(--font);color:var(--text2);border-radius:var(--radius-sm);margin-bottom:2px;}
+.mobile-nav-btn:hover,.mobile-nav-btn.active{background:var(--accent-bg);color:var(--accent);font-weight:600;}
+
+@media(max-width:768px){
+  .header-inner{padding:0 14px;}
+  .logo{font-size:13px;}
+  #hamburgerBtn{display:flex;}
+  .desktop-nav{display:none;}
+  main{padding:14px 12px;}
+  .grid-2,.grid-3{grid-template-columns:1fr;}
+  .grid-auto{grid-template-columns:1fr 1fr;}
+  .modal{padding:20px;}
+  .form-row{flex-direction:column;}
+  .form-row .form-group{flex:none!important;width:100%;}
+  table{font-size:12px;}
+  th,td{padding:7px 8px;}
+  .rec-card{margin-bottom:12px;}
+  .sec-header{flex-direction:column;align-items:flex-start;}
+  .tabs{flex-wrap:wrap;}
+}
+@media(max-width:480px){
+  .logo{font-size:12px;}
+  .grid-auto{grid-template-columns:1fr 1fr;}
+  .btn{font-size:12px;padding:6px 10px;}
+  .section-title{font-size:14px;}
+}
 </style>
 </head>
 <body>
 <header>
   <div class="header-inner">
-    <div class="logo">💰 미남과 양파의 경제적 자유</div>
-    <nav>
-      <button class="nav-btn active" id="navSchedule" onclick="showPage('schedule',this)">📅 주요일정</button>
-      <button class="nav-btn" onclick="showPage('supply',this)">📊 수급체크</button>
-      <button class="nav-btn" onclick="showPage('watchlist',this)">⭐ 관심종목</button>
-      <button class="nav-btn" onclick="showPage('holdings',this)">💼 보유종목</button>
-      <button class="nav-btn" onclick="showPage('recommend',this)">🎯 추천종목</button>
-      <button class="nav-btn" onclick="showPage('issues',this)">🔔 이슈사항</button>
-      <button class="nav-btn" onclick="showPage('memo',this)">📝 일기</button>
-    </nav>
+    <div class="logo">🍞 제빵과 양파의 경제적 자유</div>
     <div class="header-actions">
-      <span class="sync-dot" id="syncDot" title="Firebase 연결상태">⏳</span>
+      <span class="sync-dot" id="syncDot">⏳</span>
       <button class="icon-btn" onclick="toggleTheme()" id="themeBtn">🌙</button>
-      <button class="btn btn-primary" onclick="openLogin()" id="loginBtn" style="font-size:13px;padding:6px 14px;">🔐 로그인</button>
+      <button class="btn btn-primary" onclick="openLogin()" id="loginBtn" style="font-size:12px;padding:5px 10px;">🔐 로그인</button>
+      <button class="icon-btn" onclick="toggleMobileMenu()" id="hamburgerBtn" style="font-size:20px;">☰</button>
     </div>
+  </div>
+  <!-- 모바일 메뉴 -->
+  <div id="mobileMenu" style="display:none;background:var(--surface);border-top:1px solid var(--border);padding:8px 12px;">
+    <button class="mobile-nav-btn active" id="navSchedule" onclick="showPage('schedule',this);closeMobileMenu()">📅 주요일정</button>
+    <button class="mobile-nav-btn" onclick="showPage('supply',this);closeMobileMenu()">📊 수급체크</button>
+    <button class="mobile-nav-btn" onclick="showPage('watchlist',this);closeMobileMenu()">⭐ 관심종목</button>
+    <button class="mobile-nav-btn" onclick="showPage('holdings',this);closeMobileMenu()">💼 보유종목</button>
+    <button class="mobile-nav-btn" onclick="showPage('recommend',this);closeMobileMenu()">🎯 추천종목</button>
+    <button class="mobile-nav-btn" onclick="showPage('issues',this);closeMobileMenu()">🔔 이슈사항</button>
+    <button class="mobile-nav-btn" onclick="showPage('memo',this);closeMobileMenu()">📝 일기</button>
+  </div>
+  <!-- 데스크탑 메뉴 -->
+  <div id="desktopNav" class="desktop-nav">
+    <button class="nav-btn active" id="navScheduleD" onclick="showPage('schedule',this)">📅 주요일정</button>
+    <button class="nav-btn" onclick="showPage('supply',this)">📊 수급체크</button>
+    <button class="nav-btn" onclick="showPage('watchlist',this)">⭐ 관심종목</button>
+    <button class="nav-btn" onclick="showPage('holdings',this)">💼 보유종목</button>
+    <button class="nav-btn" onclick="showPage('recommend',this)">🎯 추천종목</button>
+    <button class="nav-btn" onclick="showPage('issues',this)">🔔 이슈사항</button>
+    <button class="nav-btn" onclick="showPage('memo',this)">📝 일기</button>
   </div>
 </header>
 <main>
 
 <!-- 주요일정 -->
 <div class="page active" id="page-schedule">
+  <!-- 상단 배너 -->
+  <div style="background:linear-gradient(135deg,#3b5bdb 0%,#7048e8 60%,#e64980 100%);border-radius:16px;padding:28px 32px;margin-bottom:24px;color:#fff;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px;box-shadow:0 4px 20px rgba(59,91,219,.3);">
+    <div>
+      <div style="font-size:22px;font-weight:800;letter-spacing:-0.5px;margin-bottom:6px;">🍞 제빵과 양파의 경제적 자유</div>
+      <div style="font-size:14px;opacity:.85;font-weight:400;line-height:1.6;">열심히 운동하고 투자해서 경제적 자유를 이루자! 💪⚽</div>
+    </div>
+    <div style="display:flex;gap:24px;flex-wrap:wrap;">
+      <div style="text-align:center;background:rgba(255,255,255,.15);border-radius:12px;padding:14px 20px;backdrop-filter:blur(4px);">
+        <div style="font-size:28px;margin-bottom:4px;">🍞</div>
+        <div style="font-weight:700;font-size:14px;">제빵</div>
+        <div style="font-size:12px;opacity:.8;margin-top:4px;">💪 헬스</div>
+      </div>
+      <div style="text-align:center;background:rgba(255,255,255,.15);border-radius:12px;padding:14px 20px;backdrop-filter:blur(4px);">
+        <div style="font-size:28px;margin-bottom:4px;">🧅</div>
+        <div style="font-weight:700;font-size:14px;">양파</div>
+        <div style="font-size:12px;opacity:.8;margin-top:4px;">⚽ 풋살</div>
+      </div>
+    </div>
+  </div>
+  <!-- 📌 공지/고정 일정 -->
+  <div id="pinnedScheduleSection" style="margin-bottom:20px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+      <div style="font-size:13px;font-weight:700;color:var(--warning);display:flex;align-items:center;gap:6px;">📌 공지 · 중요일정</div>
+      <button class="btn btn-sm" onclick="requireEditor(openAddPinned)" style="border-color:var(--warning);color:var(--warning);">+ 공지 추가</button>
+    </div>
+    <div id="pinnedList"><div class="loading-text" style="padding:10px;">등록된 공지가 없습니다</div></div>
+  </div>
+
   <div class="sec-header">
     <div class="section-title">📅 이달의 주요 일정</div>
     <div style="display:flex;gap:8px;align-items:center;">
@@ -218,12 +289,12 @@ textarea{resize:vertical;min-height:80px;}
 <div class="page" id="page-holdings">
   <div class="section-title mb-16">💼 보유종목</div>
   <div class="tabs">
-    <button class="tab active" onclick="showHoldingTab('minam',this)">🧑 미남</button>
+    <button class="tab active" onclick="showHoldingTab('minam',this)">🍞 제빵</button>
     <button class="tab" onclick="showHoldingTab('yangpa',this)">🧅 양파</button>
   </div>
   <div id="holding-minam">
-    <div class="sec-header"><span style="font-weight:700;">🧑 미남 포트폴리오</span><button class="btn btn-primary" onclick="requireUser('minam',openAddHolding,'minam')">+ 종목 추가</button></div>
-    <div id="minam-holding-content"><div class="private-lock">🔒<div>미남 로그인 후 확인 가능합니다</div></div></div>
+    <div class="sec-header"><span style="font-weight:700;">🍞 제빵 포트폴리오</span><button class="btn btn-primary" onclick="requireUser('minam',openAddHolding,'minam')">+ 종목 추가</button></div>
+    <div id="minam-holding-content"><div class="private-lock">🔒<div>제빵 로그인 후 확인 가능합니다</div></div></div>
   </div>
   <div id="holding-yangpa" style="display:none;">
     <div class="sec-header"><span style="font-weight:700;">🧅 양파 포트폴리오</span><button class="btn btn-primary" onclick="requireUser('yangpa',openAddHolding,'yangpa')">+ 종목 추가</button></div>
@@ -239,7 +310,15 @@ textarea{resize:vertical;min-height:80px;}
 
 <!-- 이슈사항 -->
 <div class="page" id="page-issues">
-  <div class="sec-header"><div class="section-title">🔔 이슈사항</div><button class="btn btn-primary" onclick="requireEditor(openAddIssue)">+ 이슈 추가</button></div>
+  <div class="sec-header">
+    <div class="section-title">🔔 이슈사항</div>
+    <button class="btn btn-primary" onclick="requireEditor(openAddIssue)">+ 이슈 추가</button>
+  </div>
+  <div class="tabs">
+    <button class="tab active" onclick="showIssueTab('all',this)">📋 전체</button>
+    <button class="tab" onclick="showIssueTab('article',this)">📰 기사 공유</button>
+    <button class="tab" onclick="showIssueTab('custom',this)">✍️ 직접 입력</button>
+  </div>
   <div id="issueContainer"><div class="loading-text"><div class="spinner"></div></div></div>
 </div>
 
@@ -247,7 +326,7 @@ textarea{resize:vertical;min-height:80px;}
 <div class="page" id="page-memo">
   <div class="section-title mb-16">📝 메모 · 일기</div>
   <div class="tabs">
-    <button class="tab active" onclick="showMemoTab('minam',this)">🧑 미남 일기</button>
+    <button class="tab active" onclick="showMemoTab('minam',this)">🍞 제빵 일기</button>
     <button class="tab" onclick="showMemoTab('yangpa',this)">🧅 양파 일기</button>
   </div>
   <div id="memo-minam">
@@ -265,7 +344,7 @@ textarea{resize:vertical;min-height:80px;}
       </div>
       <button class="btn btn-primary" onclick="requireUser('minam',openAddMemo,'minam')">+ 일기 작성</button>
     </div>
-    <div id="minamMemoList"><div class="private-lock">🔒<div>미남 로그인 후 확인 가능합니다</div></div></div>
+    <div id="minamMemoList"><div class="private-lock">🔒<div>제빵 로그인 후 확인 가능합니다</div></div></div>
   </div>
   <div id="memo-yangpa" style="display:none;">
     <div class="sec-header">
@@ -293,11 +372,11 @@ textarea{resize:vertical;min-height:80px;}
     <button class="modal-close" onclick="closeModal('loginModal')">✕</button>
     <div class="modal-title">🔐 로그인</div>
     <div class="tabs" id="loginTabs">
-      <button class="tab active" onclick="setLoginMode('minam',this)">🧑 미남</button>
+      <button class="tab active" onclick="setLoginMode('minam',this)">🍞 제빵</button>
       <button class="tab" onclick="setLoginMode('yangpa',this)">🧅 양파</button>
     </div>
     <div class="form-group" style="margin-bottom:14px;">
-      <label id="loginLabel">미남 비밀번호</label>
+      <label id="loginLabel">제빵 비밀번호</label>
       <input type="password" id="loginPw" placeholder="비밀번호 입력" onkeydown="if(event.key==='Enter')doLogin()">
     </div>
     <div style="display:flex;gap:8px;justify-content:flex-end;">
@@ -346,11 +425,51 @@ textarea{resize:vertical;min-height:80px;}
 <div class="modal-overlay" id="holdingModal">
   <div class="modal" style="max-width:520px;">
     <button class="modal-close" onclick="closeModal('holdingModal')">✕</button>
-    <div class="modal-title" id="holdingModalTitle">종목 추가</div>
-    <div class="form-row mb-16"><div class="form-group" style="flex:2;"><label>종목명</label><input type="text" id="hName" placeholder="삼성전자"></div><div class="form-group" style="flex:1;"><label>종목코드</label><input type="text" id="hCode" placeholder="005930"></div></div>
-    <div class="form-group mb-16"><label>섹터</label><input type="text" id="hSector" placeholder="반도체"></div>
-    <div class="form-row mb-16"><div class="form-group" style="flex:1;"><label>매수가</label><input type="number" id="hBuyPrice"></div><div class="form-group" style="flex:1;"><label>수량</label><input type="number" id="hQty"></div></div>
-    <div style="display:flex;gap:8px;justify-content:flex-end;"><button class="btn" onclick="closeModal('holdingModal')">취소</button><button class="btn btn-primary" onclick="saveHolding()">저장</button></div>
+    <div class="modal-title" id="holdingModalTitle">종목 추가/수정</div>
+    <div class="form-row mb-16">
+      <div class="form-group" style="flex:2;"><label>종목명</label><input type="text" id="hName" placeholder="삼성전자"></div>
+      <div class="form-group" style="flex:1;"><label>섹터</label><input type="text" id="hSector" placeholder="반도체"></div>
+    </div>
+    <div class="form-row mb-16">
+      <div class="form-group" style="flex:1;"><label>매수가 (원)</label><input type="number" id="hBuyPrice" placeholder="0"></div>
+      <div class="form-group" style="flex:1;"><label>보유수량</label><input type="number" id="hQty" placeholder="0"></div>
+    </div>
+    <div class="form-row mb-16">
+      <div class="form-group" style="flex:1;"><label>현재가 (원)</label><input type="number" id="hCurPrice" placeholder="직접 입력"></div>
+    </div>
+    <div style="display:flex;gap:8px;justify-content:flex-end;">
+      <button class="btn" onclick="closeModal('holdingModal')">취소</button>
+      <button class="btn btn-primary" onclick="saveHolding()">저장</button>
+    </div>
+  </div>
+</div>
+
+<!-- 계좌 요약 모달 (입금/출금/실현손익 등) -->
+<div class="modal-overlay" id="accountModal">
+  <div class="modal" style="max-width:480px;">
+    <button class="modal-close" onclick="closeModal('accountModal')">✕</button>
+    <div class="modal-title" id="accountModalTitle">💳 계좌 정보 입력</div>
+    <div class="form-row mb-16">
+      <div class="form-group" style="flex:1;"><label>총 입금금액 (원)</label><input type="number" id="aDeposit" placeholder="0"></div>
+      <div class="form-group" style="flex:1;"><label>총 출금금액 (원)</label><input type="number" id="aWithdraw" placeholder="0"></div>
+    </div>
+    <div class="form-row mb-16">
+      <div class="form-group" style="flex:1;"><label>현금잔고 (원)</label><input type="number" id="aCash" placeholder="0"></div>
+    </div>
+    <div style="font-size:12px;color:var(--text3);padding:8px 12px;background:var(--surface2);border-radius:8px;margin-bottom:16px;">
+      💡 일별변동금액은 저장 시 자동계산됩니다 (오늘 계좌총액 - 전일 계좌총액)
+    </div>
+    <div class="form-row mb-16">
+      <div class="form-group" style="flex:1;"><label>실현손익 (원)</label><input type="number" id="aRealizedPnl" placeholder="확정된 수익"></div>
+    </div>
+    <div class="form-row mb-16">
+      <div class="form-group" style="flex:1;"><label>이자 (원)</label><input type="number" id="aInterest" placeholder="0"></div>
+      <div class="form-group" style="flex:1;"><label>배당금 (원)</label><input type="number" id="aDividend" placeholder="0"></div>
+    </div>
+    <div style="display:flex;gap:8px;justify-content:flex-end;">
+      <button class="btn" onclick="closeModal('accountModal')">취소</button>
+      <button class="btn btn-primary" onclick="saveAccount()">저장</button>
+    </div>
   </div>
 </div>
 <div class="modal-overlay" id="recommendModal">
@@ -367,6 +486,14 @@ textarea{resize:vertical;min-height:80px;}
   <div class="modal" style="max-width:540px;">
     <button class="modal-close" onclick="closeModal('issueModal')">✕</button>
     <div class="modal-title">🔔 이슈 추가</div>
+    <div class="form-group mb-16">
+      <label>구분</label>
+      <div style="display:flex;gap:8px;">
+        <button type="button" class="issue-type-btn active" onclick="setIssueType('article',this)" style="flex:1;padding:10px;border-radius:8px;border:1.5px solid var(--accent);background:var(--accent-bg);color:var(--accent);font-weight:600;cursor:pointer;font-family:var(--font);font-size:13px;">📰 기사 공유</button>
+        <button type="button" class="issue-type-btn" onclick="setIssueType('custom',this)" style="flex:1;padding:10px;border-radius:8px;border:1.5px solid var(--border);background:var(--surface);color:var(--text2);font-weight:500;cursor:pointer;font-family:var(--font);font-size:13px;">✍️ 직접 입력</button>
+      </div>
+      <input type="hidden" id="issueType" value="article">
+    </div>
     <div class="form-group mb-16"><label>날짜</label><input type="date" id="issueDate"></div>
     <div class="form-group mb-16"><label>이슈 제목</label><input type="text" id="issueTitle"></div>
     <div class="form-group mb-16"><label>상세 내용</label><textarea id="issueBody" style="min-height:100px;"></textarea></div>
@@ -380,6 +507,30 @@ textarea{resize:vertical;min-height:80px;}
     <div style="display:flex;gap:8px;justify-content:flex-end;"><button class="btn" onclick="closeModal('issueModal')">취소</button><button class="btn btn-primary" onclick="saveIssue()">저장</button></div>
   </div>
 </div>
+<!-- 공지/고정 일정 모달 -->
+<div class="modal-overlay" id="pinnedModal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('pinnedModal')">✕</button>
+    <div class="modal-title">📌 공지 · 중요일정 추가</div>
+    <div class="form-group mb-16">
+      <label>중요도</label>
+      <div style="display:flex;gap:8px;">
+        <button type="button" class="pinned-level-btn active" onclick="setPinnedLevel('high',this)" style="flex:1;padding:8px;border-radius:8px;border:1.5px solid var(--danger);background:var(--danger-bg);color:var(--danger);font-weight:600;cursor:pointer;font-family:var(--font);font-size:13px;">🔴 긴급</button>
+        <button type="button" class="pinned-level-btn" onclick="setPinnedLevel('mid',this)" style="flex:1;padding:8px;border-radius:8px;border:1.5px solid var(--border);background:var(--surface);color:var(--text2);font-weight:500;cursor:pointer;font-family:var(--font);font-size:13px;">🟡 중요</button>
+        <button type="button" class="pinned-level-btn" onclick="setPinnedLevel('low',this)" style="flex:1;padding:8px;border-radius:8px;border:1.5px solid var(--border);background:var(--surface);color:var(--text2);font-weight:500;cursor:pointer;font-family:var(--font);font-size:13px;">🔵 공지</button>
+      </div>
+      <input type="hidden" id="pinnedLevel" value="high">
+    </div>
+    <div class="form-group mb-16"><label>제목</label><input type="text" id="pinnedTitle" placeholder="예: FOMC 회의 결과 발표"></div>
+    <div class="form-group mb-16"><label>날짜 (선택)</label><input type="date" id="pinnedDate"></div>
+    <div class="form-group mb-16"><label>내용</label><textarea id="pinnedDesc" placeholder="상세 내용을 입력하세요"></textarea></div>
+    <div style="display:flex;gap:8px;justify-content:flex-end;">
+      <button class="btn" onclick="closeModal('pinnedModal')">취소</button>
+      <button class="btn btn-primary" onclick="savePinned()">저장</button>
+    </div>
+  </div>
+</div>
+
 <!-- 수급 입력 모달 -->
 <div class="modal-overlay" id="supplyModal">
   <div class="modal" style="max-width:540px;">
@@ -586,7 +737,7 @@ function setLoginMode(mode, btn) {
   loginMode = mode;
   document.querySelectorAll('#loginTabs .tab').forEach(function(t) { t.classList.remove('active'); });
   if (btn) btn.classList.add('active');
-  var labels = { minam: '미남 비밀번호', yangpa: '양파 비밀번호' };
+  var labels = { minam: '제빵 비밀번호', yangpa: '양파 비밀번호' };
   document.getElementById('loginLabel').textContent = labels[mode] || '비밀번호';
 }
 function doLogin() {
@@ -599,7 +750,7 @@ function doLogin() {
       session[loginMode] = true;
       closeModal('loginModal');
       document.getElementById('loginBtn').textContent = '✅';
-      showToast((loginMode === 'editor' ? '편집자' : loginMode === 'minam' ? '미남' : '양파') + '로 로그인했습니다');
+      showToast((loginMode === 'editor' ? '편집자' : loginMode === 'minam' ? '제빵' : '양파') + '로 로그인했습니다');
       if (loginMode === 'minam' || loginMode === 'editor') {
         fbGetAll('holdings_minam').then(function(d) { cache.holdings_minam = d; renderHoldings(); });
         fbGetAll('memos_minam').then(function(d) { cache.memos_minam = d; renderMemos('minam'); });
@@ -638,7 +789,7 @@ function requireUser(user, fn) {
       loginMode = user;
       tabs.forEach(function(t){t.classList.remove('active');});
       if (tabs[idx]) tabs[idx].classList.add('active');
-      document.getElementById('loginLabel').textContent = user === 'minam' ? '미남 비밀번호' : '양파 비밀번호';
+      document.getElementById('loginLabel').textContent = user === 'minam' ? '제빵 비밀번호' : '양파 비밀번호';
     }, 100);
     return;
   }
@@ -772,21 +923,125 @@ function showHoldingTab(user, btn) {
 }
 function openAddHolding(user) {
   currentHoldingUser = user;
-  document.getElementById('holdingModalTitle').textContent = (user === 'minam' ? '🧑 미남' : '🧅 양파') + ' 종목 추가';
-  ['hName','hCode','hSector','hBuyPrice','hQty'].forEach(function(id) { document.getElementById(id).value = ''; });
+  editHoldingId = null;
+  document.getElementById('holdingModalTitle').textContent = (user === 'minam' ? '🍞 제빵' : '🧅 양파') + ' 종목 추가';
+  ['hName','hSector','hBuyPrice','hQty','hCurPrice'].forEach(function(id) { document.getElementById(id).value = ''; });
   openModal('holdingModal');
 }
 function saveHolding() {
   var name = document.getElementById('hName').value.trim();
-  var code = document.getElementById('hCode').value.trim();
   var sector = document.getElementById('hSector').value.trim();
-  var buyPrice = parseFloat(document.getElementById('hBuyPrice').value);
-  var qty = parseInt(document.getElementById('hQty').value);
-  if (!name || !buyPrice || !qty) { showToast('종목명, 매수가, 수량은 필수입니다'); return; }
+  var buyPrice = parseFloat(document.getElementById('hBuyPrice').value) || 0;
+  var qty = parseInt(document.getElementById('hQty').value) || 0;
+  var curPrice = parseFloat(document.getElementById('hCurPrice').value) || 0;
+  if (!name) { showToast('종목명은 필수입니다'); return; }
   var col = 'holdings_' + currentHoldingUser;
-  fbAdd(col, { name: name, code: code, sector: sector, buyPrice: buyPrice, qty: qty, createdAt: Date.now() }).then(function(ref) {
-    cache[col].push({ id: ref.id, name: name, code: code, sector: sector, buyPrice: buyPrice, qty: qty });
-    closeModal('holdingModal'); renderHoldings(); showToast('종목이 추가됐습니다');
+  var data = { name: name, sector: sector, buyPrice: buyPrice, qty: qty, curPrice: curPrice, createdAt: Date.now() };
+  if (editHoldingId) {
+    fbSet(col, editHoldingId, data).then(function() {
+      var idx = cache[col].findIndex(function(h){ return h.id === editHoldingId; });
+      if (idx >= 0) cache[col][idx] = Object.assign({ id: editHoldingId }, data);
+      editHoldingId = null;
+      closeModal('holdingModal'); renderHoldings(); showToast('종목이 수정됐습니다');
+    });
+  } else {
+    fbAdd(col, data).then(function(ref) {
+      cache[col].push(Object.assign({ id: ref.id }, data));
+      closeModal('holdingModal'); renderHoldings(); showToast('종목이 추가됐습니다');
+    });
+  }
+}
+
+var editHoldingId = null;
+function openEditHolding(user, id) {
+  var col = 'holdings_' + user;
+  var h = cache[col].find(function(x){ return x.id === id; });
+  if (!h) return;
+  currentHoldingUser = user;
+  editHoldingId = id;
+  document.getElementById('holdingModalTitle').textContent = '종목 수정';
+  document.getElementById('hName').value = h.name || '';
+  document.getElementById('hSector').value = h.sector || '';
+  document.getElementById('hBuyPrice').value = h.buyPrice || '';
+  document.getElementById('hQty').value = h.qty || '';
+  document.getElementById('hCurPrice').value = h.curPrice || '';
+  openModal('holdingModal');
+}
+
+function saveAccount() {
+  var user = currentHoldingUser;
+  var cash = parseFloat(document.getElementById('aCash').value) || 0;
+  var deposit = parseFloat(document.getElementById('aDeposit').value) || 0;
+  var withdraw = parseFloat(document.getElementById('aWithdraw').value) || 0;
+  var realizedPnl = parseFloat(document.getElementById('aRealizedPnl').value) || 0;
+  var interest = parseFloat(document.getElementById('aInterest').value) || 0;
+  var dividend = parseFloat(document.getElementById('aDividend').value) || 0;
+
+  // 오늘 날짜
+  var today = new Date().toISOString().split('T')[0];
+
+  // 현재 보유종목 평가금액 합계
+  var holdings = cache['holdings_' + user] || [];
+  var totalCur = holdings.reduce(function(sum, h){ return sum + ((h.curPrice||0)*(h.qty||0)); }, 0);
+
+  // 오늘 계좌 총액 = 평가금액 + 현금
+  var todayTotal = totalCur + cash;
+
+  fbGetAll('accounts').then(function(accs) {
+    var acc = accs.find(function(a){ return a.id === user; }) || {};
+
+    // 전일 계좌총액 가져오기
+    var yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
+    var dailyHistory = acc.dailyHistory || {};
+    var yesterdayTotal = dailyHistory[yesterday] || acc.lastTotal || 0;
+
+    // 일별변동 = 오늘총액 - 전일총액
+    var dailyChange = yesterdayTotal > 0 ? (todayTotal - yesterdayTotal) : 0;
+
+    // 오늘 총액 히스토리에 저장
+    dailyHistory[today] = todayTotal;
+
+    // 최근 30일치만 보관
+    var keys = Object.keys(dailyHistory).sort();
+    if (keys.length > 30) {
+      var toDelete = keys.slice(0, keys.length - 30);
+      toDelete.forEach(function(k){ delete dailyHistory[k]; });
+    }
+
+    var data = {
+      deposit: deposit,
+      withdraw: withdraw,
+      cash: cash,
+      realizedPnl: realizedPnl,
+      interest: interest,
+      dividend: dividend,
+      dailyHistory: dailyHistory,
+      lastTotal: todayTotal,
+      dailyChange: dailyChange,
+      updatedAt: Date.now(),
+      updatedDate: today
+    };
+
+    fbSet('accounts', user, data).then(function() {
+      closeModal('accountModal');
+      renderHoldings();
+      showToast('저장됐습니다! 일별변동: ' + (dailyChange >= 0 ? '+' : '') + fmtNum(dailyChange) + '원');
+    });
+  });
+}
+
+function openAccountModal(user) {
+  currentHoldingUser = user;
+  document.getElementById('accountModalTitle').textContent = (user === 'minam' ? '🍞 제빵' : '🧅 양파') + ' 계좌 정보 입력';
+  fbGetAll('accounts').then(function(items) {
+    var acc = items.find(function(a){ return a.id === user; }) || {};
+    document.getElementById('aDeposit').value = acc.deposit || '';
+    document.getElementById('aWithdraw').value = acc.withdraw || '';
+    document.getElementById('aCash').value = acc.cash || '';
+    document.getElementById('aRealizedPnl').value = acc.realizedPnl || '';
+    document.getElementById('aInterest').value = acc.interest || '';
+    document.getElementById('aDividend').value = acc.dividend || '';
+    openModal('accountModal');
   });
 }
 function deleteHolding(user, id) {
@@ -853,11 +1108,42 @@ function renderRecommend() {
 // ISSUES
 // ══════════════════════════════════════════
 var issueFiles = [];
+var currentIssueType = 'article';
+function setIssueType(type, btn) {
+  currentIssueType = type;
+  document.getElementById('issueType').value = type;
+  document.querySelectorAll('.issue-type-btn').forEach(function(b) {
+    b.style.borderColor = 'var(--border)';
+    b.style.background = 'var(--surface)';
+    b.style.color = 'var(--text2)';
+    b.style.fontWeight = '500';
+  });
+  btn.style.borderColor = 'var(--accent)';
+  btn.style.background = 'var(--accent-bg)';
+  btn.style.color = 'var(--accent)';
+  btn.style.fontWeight = '600';
+}
 function openAddIssue() {
   ['issueTitle','issueBody','issueStocks'].forEach(function(id){document.getElementById(id).value='';});
   document.getElementById('issueDate').value = new Date().toISOString().split('T')[0];
   issueFiles = [];
   document.getElementById('issueFilePreview').innerHTML = '';
+  // 기사공유 기본 선택
+  currentIssueType = 'article';
+  document.getElementById('issueType').value = 'article';
+  document.querySelectorAll('.issue-type-btn').forEach(function(b, i) {
+    if (i === 0) {
+      b.style.borderColor = 'var(--accent)';
+      b.style.background = 'var(--accent-bg)';
+      b.style.color = 'var(--accent)';
+      b.style.fontWeight = '600';
+    } else {
+      b.style.borderColor = 'var(--border)';
+      b.style.background = 'var(--surface)';
+      b.style.color = 'var(--text2)';
+      b.style.fontWeight = '500';
+    }
+  });
   openModal('issueModal');
 }
 function handleIssueFileSelect(e) { Array.from(e.target.files).forEach(readIssueFile); e.target.value=''; }
@@ -882,6 +1168,7 @@ function saveIssue() {
   if (!title) { showToast('제목을 입력하세요'); return; }
   fbAdd('issues', {
     date: document.getElementById('issueDate').value,
+    issueType: document.getElementById('issueType').value || 'custom',
     title: title,
     body: document.getElementById('issueBody').value.trim(),
     stocks: document.getElementById('issueStocks').value.trim(),
@@ -893,8 +1180,25 @@ function deleteIssue(id) {
   if (!confirm('삭제하시겠습니까?')) return;
   fbDel('issues', id);
 }
+var currentIssueTab = 'all';
+function showIssueTab(tab, btn) {
+  currentIssueTab = tab;
+  document.querySelectorAll('#page-issues .tab').forEach(function(t){t.classList.remove('active');});
+  if (btn) btn.classList.add('active');
+  renderIssues();
+}
 function renderIssues() {
-  var issues = cache.issues.slice().sort(function(a,b){return (b.createdAt||0)-(a.createdAt||0);});
+  var allIssues = cache.issues.slice().sort(function(a,b){
+    if (b.pinned && !a.pinned) return 1;
+    if (a.pinned && !b.pinned) return -1;
+    return (b.createdAt||0)-(a.createdAt||0);
+  });
+  var issues = allIssues.filter(function(i) {
+    if (currentIssueTab === 'all') return true;
+    if (currentIssueTab === 'article') return i.issueType === 'article' || !i.issueType;
+    if (currentIssueTab === 'custom') return i.issueType === 'custom';
+    return true;
+  });
   var el = document.getElementById('issueContainer');
   if (!issues.length) { el.innerHTML = '<div class="loading-text">등록된 이슈가 없습니다</div>'; return; }
   el.innerHTML = issues.map(function(i) {
@@ -915,7 +1219,7 @@ function showMemoTab(user, btn) {
 }
 function openAddMemo(user) {
   currentMemoUser = user; memoImages = [];
-  document.getElementById('memoModalTitle').textContent = (user === 'minam' ? '🧑 미남' : '🧅 양파') + ' 일기 작성';
+  document.getElementById('memoModalTitle').textContent = (user === 'minam' ? '🍞 제빵' : '🧅 양파') + ' 일기 작성';
   ['memoTitle','memoContent'].forEach(function(id){document.getElementById(id).value='';});
   document.getElementById('memoDate').value = new Date().toISOString().split('T')[0];
   document.getElementById('memoEmoji').value = '';
@@ -963,7 +1267,7 @@ function deleteMemo(user, id) {
 function renderMemos(user) {
   var el = document.getElementById(user + 'MemoList');
   if (!session[user]) {
-    el.innerHTML = '<div class="private-lock">🔒<div>' + (user==='minam'?'🧑 미남':'🧅 양파') + ' 로그인 후 확인 가능합니다</div><button class="btn btn-primary" style="margin-top:8px;" onclick="openLogin()">로그인</button></div>';
+    el.innerHTML = '<div class="private-lock">🔒<div>' + (user==='minam'?'🍞 제빵':'🧅 양파') + ' 로그인 후 확인 가능합니다</div><button class="btn btn-primary" style="margin-top:8px;" onclick="openLogin()">로그인</button></div>';
     return;
   }
   var search = (document.getElementById(user+'MemoSearch')||{value:''}).value.toLowerCase();
@@ -986,6 +1290,95 @@ function renderMemos(user) {
   }).join('');
 }
 function openLightbox(src) { document.getElementById('lightboxImg').src = src; document.getElementById('lightbox').classList.add('open'); }
+
+// ══════════════════════════════════════════
+// PINNED SCHEDULE (공지/고정 일정)
+// ══════════════════════════════════════════
+var currentPinnedLevel = 'high';
+
+function setPinnedLevel(level, btn) {
+  currentPinnedLevel = level;
+  document.getElementById('pinnedLevel').value = level;
+  var colors = { high: 'var(--danger)', mid: 'var(--warning)', low: 'var(--accent)' };
+  var bgs = { high: 'var(--danger-bg)', mid: 'var(--warning-bg)', low: 'var(--accent-bg)' };
+  document.querySelectorAll('.pinned-level-btn').forEach(function(b) {
+    b.style.borderColor = 'var(--border)';
+    b.style.background = 'var(--surface)';
+    b.style.color = 'var(--text2)';
+    b.style.fontWeight = '500';
+  });
+  btn.style.borderColor = colors[level];
+  btn.style.background = bgs[level];
+  btn.style.color = colors[level];
+  btn.style.fontWeight = '700';
+}
+
+function openAddPinned() {
+  ['pinnedTitle','pinnedDesc'].forEach(function(id){ document.getElementById(id).value = ''; });
+  document.getElementById('pinnedDate').value = '';
+  currentPinnedLevel = 'high';
+  document.getElementById('pinnedLevel').value = 'high';
+  document.querySelectorAll('.pinned-level-btn').forEach(function(b, i) {
+    if (i === 0) { b.style.borderColor='var(--danger)';b.style.background='var(--danger-bg)';b.style.color='var(--danger)';b.style.fontWeight='700'; }
+    else { b.style.borderColor='var(--border)';b.style.background='var(--surface)';b.style.color='var(--text2)';b.style.fontWeight='500'; }
+  });
+  openModal('pinnedModal');
+}
+
+function savePinned() {
+  var title = document.getElementById('pinnedTitle').value.trim();
+  if (!title) { showToast('제목을 입력하세요'); return; }
+  fbGetAll('pinned').then(function(items) {
+    if (items.length >= 5) { showToast('공지는 최대 5개까지 등록 가능합니다'); return; }
+    fbAdd('pinned', {
+      title: title,
+      date: document.getElementById('pinnedDate').value,
+      desc: document.getElementById('pinnedDesc').value.trim(),
+      level: document.getElementById('pinnedLevel').value,
+      createdAt: Date.now()
+    }).then(function() { closeModal('pinnedModal'); renderPinned(); showToast('공지가 등록됐습니다 📌'); });
+  });
+}
+
+function deletePinned(id) {
+  if (!confirm('삭제하시겠습니까?')) return;
+  fbDel('pinned', id).then(function(){ renderPinned(); });
+}
+
+function renderPinned() {
+  fbGetAll('pinned').then(function(items) {
+    items.sort(function(a,b){ return (a.createdAt||0)-(b.createdAt||0); });
+    var el = document.getElementById('pinnedList');
+    if (!el) return;
+    if (!items.length) { el.innerHTML = '<div class="loading-text" style="padding:10px;">등록된 공지가 없습니다</div>'; return; }
+    var levelInfo = {
+      high: { color: 'var(--danger)', bg: 'var(--danger-bg)', icon: '🔴' },
+      mid:  { color: 'var(--warning)', bg: 'var(--warning-bg)', icon: '🟡' },
+      low:  { color: 'var(--accent)', bg: 'var(--accent-bg)', icon: '🔵' }
+    };
+    el.innerHTML = items.map(function(item) {
+      var lv = levelInfo[item.level] || levelInfo.low;
+      return '<div style="display:flex;align-items:flex-start;gap:10px;padding:12px 16px;background:' + lv.bg + ';border:1.5px solid ' + lv.color + ';border-radius:10px;margin-bottom:8px;">' +
+        '<span style="font-size:18px;flex-shrink:0;">' + lv.icon + '</span>' +
+        '<div style="flex:1;min-width:0;">' +
+        '<div style="font-weight:700;font-size:14px;color:var(--text);">' + item.title + '</div>' +
+        (item.date ? '<div style="font-size:11px;color:var(--text3);margin-top:2px;">📅 ' + item.date + '</div>' : '') +
+        (item.desc ? '<div style="font-size:13px;color:var(--text2);margin-top:4px;line-height:1.6;">' + item.desc + '</div>' : '') +
+        '</div>' +
+        '<button class="btn btn-sm btn-danger" onclick="requireEditor(deletePinned,' + JSON.stringify(item.id) + ')">삭제</button>' +
+        '</div>';
+    }).join('');
+  });
+}
+
+function toggleIssuePin(id, pinned) {
+  fbSet('issues', id, { pinned: pinned }).then(function() {
+    var idx = cache.issues.findIndex(function(i){ return i.id === id; });
+    if (idx >= 0) cache.issues[idx].pinned = pinned;
+    renderIssues();
+    showToast(pinned ? '이슈가 고정됐습니다 📌' : '고정이 해제됐습니다');
+  });
+}
 
 // ══════════════════════════════════════════
 // SUPPLY CHECK (수급체크)
@@ -1065,6 +1458,32 @@ function initMonthSelect() {
   for (var i = 0; i < sel.options.length; i++) { if (sel.options[i].value === val) { sel.options[i].selected = true; break; } }
 }
 
+// ── 모바일 메뉴 ──
+function toggleMobileMenu() {
+  var menu = document.getElementById('mobileMenu');
+  menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
+}
+function closeMobileMenu() {
+  document.getElementById('mobileMenu').style.display = 'none';
+}
+
+// showPage 오버라이드 - 모바일/데스크탑 모두 active 처리
+var _origShowPage = showPage;
+showPage = function(id, btn) {
+  document.querySelectorAll('.page').forEach(function(p){p.classList.remove('active');});
+  document.querySelectorAll('.nav-btn,.mobile-nav-btn').forEach(function(b){b.classList.remove('active');});
+  document.getElementById('page-' + id).classList.add('active');
+  if (btn) btn.classList.add('active');
+  currentPage = id;
+  if (id === 'schedule') renderSchedule();
+  if (id === 'watchlist') renderWatchlist();
+  if (id === 'holdings') renderHoldings();
+  if (id === 'recommend') renderRecommend();
+  if (id === 'issues') renderIssues();
+  if (id === 'memo') renderMemos(currentMemoUser);
+  if (id === 'supply') renderSupply();
+};
+
 // 페이지 로드 시 실행
 applyTheme();
 setSyncDot('loading');
@@ -1073,6 +1492,8 @@ initMonthSelect();
 // 보유종목은 로그인 없이도 자동 로드
 fbGetAll('holdings_minam').then(function(d){ cache.holdings_minam = d; });
 fbGetAll('holdings_yangpa').then(function(d){ cache.holdings_yangpa = d; });
+// 공지 자동 로드
+renderPinned();
 
 // 로그인 상태 복원
 (function restoreLogin() {
@@ -1083,7 +1504,7 @@ fbGetAll('holdings_yangpa').then(function(d){ cache.holdings_yangpa = d; });
 
   // 버튼 표시 업데이트
   var primary = session.minam ? 'minam' : 'yangpa';
-  var name = primary === 'minam' ? '🧑 미남' : '🧅 양파';
+  var name = primary === 'minam' ? '🍞 제빵' : '🧅 양파';
   var btn = document.getElementById('loginBtn');
   if (btn) {
     btn.textContent = name;
