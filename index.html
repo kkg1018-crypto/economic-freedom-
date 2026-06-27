@@ -292,13 +292,53 @@ textarea{resize:vertical;min-height:80px;}
     <button class="tab active" onclick="showHoldingTab('minam',this)">🍞 제빵</button>
     <button class="tab" onclick="showHoldingTab('yangpa',this)">🧅 양파</button>
   </div>
+
+  <!-- 제빵 -->
   <div id="holding-minam">
-    <div class="sec-header"><span style="font-weight:700;">🍞 제빵 포트폴리오</span><button class="btn btn-primary" onclick="requireUser('minam',openAddHolding,'minam')">+ 종목 추가</button></div>
-    <div id="minam-holding-content"><div class="private-lock">🔒<div>제빵 로그인 후 확인 가능합니다</div></div></div>
+    <div id="minam-holding-inner">
+      <div style="display:flex;gap:2px;background:var(--surface2);padding:3px;border-radius:10px;width:fit-content;margin-bottom:20px;border:1px solid var(--border);">
+        <button class="tab active" id="minam-sub-stock" onclick="showHoldingSubTab('minam','stock',this)">📋 보유종목</button>
+        <button class="tab" id="minam-sub-account" onclick="showHoldingSubTab('minam','account',this)">💳 계좌현황</button>
+      </div>
+      <div id="minam-section-stock">
+        <div class="sec-header">
+          <span style="font-weight:800;font-size:15px;">📋 보유종목</span>
+          <button class="btn btn-primary" onclick="requireUser('minam',openAddHolding,'minam')">+ 종목 추가</button>
+        </div>
+        <div id="minam-stock-content"><div class="loading-text"><div class="spinner"></div></div></div>
+      </div>
+      <div id="minam-section-account" style="display:none;">
+        <div class="sec-header">
+          <span style="font-weight:800;font-size:15px;">💳 계좌현황</span>
+          <button class="btn" onclick="requireUser('minam',openAccountModal,'minam')">✏️ 계좌 정보 수정</button>
+        </div>
+        <div id="minam-account-content"><div class="loading-text"><div class="spinner"></div></div></div>
+      </div>
+    </div>
   </div>
+
+  <!-- 양파 -->
   <div id="holding-yangpa" style="display:none;">
-    <div class="sec-header"><span style="font-weight:700;">🧅 양파 포트폴리오</span><button class="btn btn-primary" onclick="requireUser('yangpa',openAddHolding,'yangpa')">+ 종목 추가</button></div>
-    <div id="yangpa-holding-content"><div class="private-lock">🔒<div>양파 로그인 후 확인 가능합니다</div></div></div>
+    <div id="yangpa-holding-inner">
+      <div style="display:flex;gap:2px;background:var(--surface2);padding:3px;border-radius:10px;width:fit-content;margin-bottom:20px;border:1px solid var(--border);">
+        <button class="tab active" id="yangpa-sub-stock" onclick="showHoldingSubTab('yangpa','stock',this)">📋 보유종목</button>
+        <button class="tab" id="yangpa-sub-account" onclick="showHoldingSubTab('yangpa','account',this)">💳 계좌현황</button>
+      </div>
+      <div id="yangpa-section-stock">
+        <div class="sec-header">
+          <span style="font-weight:800;font-size:15px;">📋 보유종목</span>
+          <button class="btn btn-primary" onclick="requireUser('yangpa',openAddHolding,'yangpa')">+ 종목 추가</button>
+        </div>
+        <div id="yangpa-stock-content"><div class="loading-text"><div class="spinner"></div></div></div>
+      </div>
+      <div id="yangpa-section-account" style="display:none;">
+        <div class="sec-header">
+          <span style="font-weight:800;font-size:15px;">💳 계좌현황</span>
+          <button class="btn" onclick="requireUser('yangpa',openAccountModal,'yangpa')">✏️ 계좌 정보 수정</button>
+        </div>
+        <div id="yangpa-account-content"><div class="loading-text"><div class="spinner"></div></div></div>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -712,9 +752,11 @@ function showPage(id, btn) {
   if (id === 'schedule') renderSchedule();
   if (id === 'watchlist') renderWatchlist();
   if (id === 'holdings') {
-    // 보유종목 페이지 진입 시 최신 데이터 로드
-    fbGetAll('holdings_minam').then(function(d){ cache.holdings_minam = d; renderHoldings(); });
-    fbGetAll('holdings_yangpa').then(function(d){ cache.holdings_yangpa = d; });
+    Promise.all([
+      fbGetAll('holdings_minam').then(function(d){ cache.holdings_minam = d; }),
+      fbGetAll('holdings_yangpa').then(function(d){ cache.holdings_yangpa = d; }),
+      fbGetAll('accounts').then(function(items){ items.forEach(function(a){ cache['account_'+a.id]=a; }); })
+    ]).then(function(){ renderHoldings(); });
   }
   if (id === 'recommend') renderRecommend();
   if (id === 'issues') renderIssues();
@@ -1037,9 +1079,10 @@ function saveAccount() {
       updatedDate: today
     };
 
+    cache['account_' + user] = Object.assign({ id: user }, data);
     fbSet('accounts', user, data).then(function() {
       closeModal('accountModal');
-      renderHoldings();
+      renderHoldingAccount(user);
       showToast('저장됐습니다! 일별변동: ' + (dailyChange >= 0 ? '+' : '') + fmtNum(dailyChange) + '원');
     });
   });
@@ -1048,16 +1091,14 @@ function saveAccount() {
 function openAccountModal(user) {
   currentHoldingUser = user;
   document.getElementById('accountModalTitle').textContent = (user === 'minam' ? '🍞 제빵' : '🧅 양파') + ' 계좌 정보 입력';
-  fbGetAll('accounts').then(function(items) {
-    var acc = items.find(function(a){ return a.id === user; }) || {};
-    document.getElementById('aDeposit').value = acc.deposit || '';
-    document.getElementById('aWithdraw').value = acc.withdraw || '';
-    document.getElementById('aCash').value = acc.cash || '';
-    document.getElementById('aRealizedPnl').value = acc.realizedPnl || '';
-    document.getElementById('aInterest').value = acc.interest || '';
-    document.getElementById('aDividend').value = acc.dividend || '';
-    openModal('accountModal');
-  });
+  var acc = cache['account_' + user] || {};
+  document.getElementById('aDeposit').value = acc.deposit || '';
+  document.getElementById('aWithdraw').value = acc.withdraw || '';
+  document.getElementById('aCash').value = acc.cash || '';
+  document.getElementById('aRealizedPnl').value = acc.realizedPnl || '';
+  document.getElementById('aInterest').value = acc.interest || '';
+  document.getElementById('aDividend').value = acc.dividend || '';
+  openModal('accountModal');
 }
 function deleteHolding(user, id) {
   if (!confirm('삭제하시겠습니까?')) return;
@@ -1068,15 +1109,10 @@ function deleteHolding(user, id) {
   });
 }
 function renderHoldings() {
-  ['minam','yangpa'].forEach(function(user) {
-    var lockEl = document.getElementById(user + '-lock');
-    var innerEl = document.getElementById(user + '-holding-inner');
-    // 누구나 볼 수 있음 (편집만 본인)
-    if (lockEl) lockEl.style.display = 'none';
-    if (innerEl) innerEl.style.display = 'block';
-    renderHoldingStock(user);
-    renderHoldingAccount(user);
-  });
+  renderHoldingStock('minam');
+  renderHoldingStock('yangpa');
+  renderHoldingAccount('minam');
+  renderHoldingAccount('yangpa');
 }
 
 function showHoldingSubTab(user, tab, btn) {
@@ -1143,75 +1179,65 @@ function renderHoldingStock(user) {
 function renderHoldingAccount(user) {
   var el = document.getElementById(user + '-account-content');
   if (!el) return;
+  el.innerHTML = '<div class="loading-text"><div class="spinner"></div></div>';
+
   var holdings = cache['holdings_' + user] || [];
-  var totalCur = holdings.reduce(function(s,h){ return s + (h.curPrice||0)*(h.qty||0); }, 0);
+  var totalCur = holdings.reduce(function(s,h){ return s + ((h.curPrice||0)*(h.qty||0)); }, 0);
+  var acc = cache['account_' + user] || {};
 
-  fbGetAll('accounts').then(function(accs) {
-    var acc = accs.find(function(a){ return a.id === user; }) || {};
-    var deposit = acc.deposit || 0;
-    var withdraw = acc.withdraw || 0;
-    var cash = acc.cash || 0;
-    var realizedPnl = acc.realizedPnl || 0;
-    var interest = acc.interest || 0;
-    var dividend = acc.dividend || 0;
-    var dailyChange = acc.dailyChange || 0;
+  var deposit = acc.deposit || 0;
+  var withdraw = acc.withdraw || 0;
+  var cash = acc.cash || 0;
+  var realizedPnl = acc.realizedPnl || 0;
+  var interest = acc.interest || 0;
+  var dividend = acc.dividend || 0;
+  var dailyChange = acc.dailyChange || 0;
+  var principal = deposit - withdraw;
+  var accountPnl = (totalCur + cash) - principal;
+  var finalPnl = accountPnl + realizedPnl + interest + dividend;
+  var finalPct = principal > 0 ? (finalPnl/principal*100) : 0;
 
-    var principal = deposit - withdraw;
-    var accountPnl = (totalCur + cash) - principal;
-    var finalPnl = accountPnl + realizedPnl + interest + dividend;
-    var finalPct = principal > 0 ? (finalPnl/principal*100) : 0;
+  function pnlSpan(val) {
+    var cls = val > 0 ? 'up' : val < 0 ? 'down' : 'flat';
+    return '<span class="' + cls + '" style="font-size:18px;font-weight:800;">' + (val>=0?'+':'') + fmtNum(val) + '원</span>';
+  }
 
-    function pnlHtml(val) {
-      var cls = val > 0 ? 'up' : val < 0 ? 'down' : 'flat';
-      return '<span class="' + cls + '" style="font-size:18px;font-weight:800;">' + (val>=0?'+':'') + fmtNum(val) + '원</span>';
-    }
-    function pctHtml(val) {
-      var cls = val > 0 ? 'up' : val < 0 ? 'down' : 'flat';
-      return '<span class="' + cls + '" style="font-size:15px;font-weight:700;">' + (val>=0?'+':'') + fmtNum(val,2) + '%</span>';
-    }
+  // 상단 하이라이트 배너
+  var hl = '<div style="background:linear-gradient(135deg,#3b5bdb,#7048e8);border-radius:14px;padding:20px 24px;color:#fff;margin-bottom:20px;display:flex;flex-wrap:wrap;gap:20px;align-items:center;">';
+  hl += '<div><div style="font-size:11px;opacity:.8;margin-bottom:4px;">🏆 최종손익</div>';
+  hl += '<div style="font-size:22px;font-weight:800;">' + (finalPnl>=0?'+':'') + fmtNum(finalPnl) + '원</div></div>';
+  hl += '<div style="width:1px;height:36px;background:rgba(255,255,255,.3);"></div>';
+  hl += '<div><div style="font-size:11px;opacity:.8;margin-bottom:4px;">💹 원금대비수익률</div>';
+  hl += '<div style="font-size:18px;font-weight:800;">' + (finalPct>=0?'+':'') + fmtNum(finalPct,2) + '%</div></div>';
+  hl += '<div style="width:1px;height:36px;background:rgba(255,255,255,.3);"></div>';
+  hl += '<div><div style="font-size:11px;opacity:.8;margin-bottom:4px;">📊 일별변동 (자동)</div>';
+  hl += '<div style="font-size:18px;font-weight:800;">' + (dailyChange>=0?'+':'') + fmtNum(dailyChange) + '원</div>';
+  if (acc.updatedDate) hl += '<div style="font-size:10px;opacity:.7;margin-top:2px;">' + acc.updatedDate + ' 기준</div>';
+  hl += '</div></div>';
 
-    // 최종손익 하이라이트 카드
-    var highlight = '<div style="background:linear-gradient(135deg,#3b5bdb,#7048e8);border-radius:14px;padding:20px 24px;color:#fff;margin-bottom:20px;display:flex;flex-wrap:wrap;gap:20px;align-items:center;">';
-    highlight += '<div><div style="font-size:12px;opacity:.8;margin-bottom:4px;">🏆 최종손익 (실현+계좌+이자+배당)</div>';
-    highlight += '<div style="font-size:24px;font-weight:800;">' + (finalPnl>=0?'+':'') + fmtNum(finalPnl) + '원</div></div>';
-    highlight += '<div style="width:1px;height:40px;background:rgba(255,255,255,.3);"></div>';
-    highlight += '<div><div style="font-size:12px;opacity:.8;margin-bottom:4px;">💹 원금대비 수익률</div>';
-    highlight += '<div style="font-size:20px;font-weight:800;">' + (finalPct>=0?'+':'') + fmtNum(finalPct,2) + '%</div></div>';
-    highlight += '<div style="width:1px;height:40px;background:rgba(255,255,255,.3);"></div>';
-    highlight += '<div><div style="font-size:12px;opacity:.8;margin-bottom:4px;">📊 일별변동 (자동)</div>';
-    highlight += '<div style="font-size:18px;font-weight:800;">' + (dailyChange>=0?'+':'') + fmtNum(dailyChange) + '원</div>';
-    if (acc.updatedDate) highlight += '<div style="font-size:10px;opacity:.7;margin-top:2px;">' + acc.updatedDate + ' 기준</div>';
-    highlight += '</div></div>';
-
-    // 상세 카드 그리드
-    var items = [
-      { label: '💵 총 입금', value: fmtNum(deposit) + '원' },
-      { label: '💸 총 출금', value: fmtNum(withdraw) + '원' },
-      { label: '📦 원금 (입금-출금)', value: '<strong>' + fmtNum(principal) + '원</strong>' },
-      { label: '💰 현금잔고', value: fmtNum(cash) + '원' },
-      { label: '📈 보유종목 평가금액', value: fmtNum(totalCur) + '원' },
-      { label: '📊 계좌손익 (평가+현금-원금)', value: pnlHtml(accountPnl) },
-      { label: '✅ 실현손익', value: pnlHtml(realizedPnl) },
-      { label: '🏦 이자', value: fmtNum(interest) + '원' },
-      { label: '🎁 배당금', value: fmtNum(dividend) + '원' },
-    ];
-
-    var grid = '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px;margin-bottom:16px;">';
-    items.forEach(function(item) {
-      grid += '<div class="card" style="padding:14px 16px;">';
-      grid += '<div style="font-size:11px;color:var(--text3);font-weight:700;letter-spacing:.4px;margin-bottom:6px;">' + item.label + '</div>';
-      grid += '<div style="font-size:16px;font-weight:700;">' + item.value + '</div>';
-      grid += '</div>';
-    });
-    grid += '</div>';
-
-    el.innerHTML = highlight + grid;
+  // 상세 카드
+  var items = [
+    ['💵 총 입금', fmtNum(deposit)+'원'],
+    ['💸 총 출금', fmtNum(withdraw)+'원'],
+    ['📦 원금 (입금-출금)', '<strong>'+fmtNum(principal)+'원</strong>'],
+    ['💰 현금잔고', fmtNum(cash)+'원'],
+    ['📈 보유종목 평가금액', fmtNum(totalCur)+'원'],
+    ['📊 계좌손익', pnlSpan(accountPnl)],
+    ['✅ 실현손익', pnlSpan(realizedPnl)],
+    ['🏦 이자', fmtNum(interest)+'원'],
+    ['🎁 배당금', fmtNum(dividend)+'원'],
+  ];
+  var grid = '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:12px;">';
+  items.forEach(function(item) {
+    grid += '<div class="card" style="padding:14px 16px;">';
+    grid += '<div style="font-size:11px;color:var(--text3);font-weight:700;margin-bottom:6px;">' + item[0] + '</div>';
+    grid += '<div style="font-size:15px;font-weight:700;">' + item[1] + '</div></div>';
   });
+  grid += '</div>';
+
+  el.innerHTML = hl + grid;
 }
 
-// ══════════════════════════════════════════
-// RECOMMEND
-// ══════════════════════════════════════════
 function openAddRecommend() { ['rName','rSector','rBuyPrice','rTarget','rReason'].forEach(function(id){document.getElementById(id).value='';});openModal('recommendModal'); }
 function saveRecommend() {
   var name = document.getElementById('rName').value.trim();
@@ -1607,9 +1633,11 @@ showPage = function(id, btn) {
   if (id === 'schedule') renderSchedule();
   if (id === 'watchlist') renderWatchlist();
   if (id === 'holdings') {
-    // 보유종목 페이지 진입 시 최신 데이터 로드
-    fbGetAll('holdings_minam').then(function(d){ cache.holdings_minam = d; renderHoldings(); });
-    fbGetAll('holdings_yangpa').then(function(d){ cache.holdings_yangpa = d; });
+    Promise.all([
+      fbGetAll('holdings_minam').then(function(d){ cache.holdings_minam = d; }),
+      fbGetAll('holdings_yangpa').then(function(d){ cache.holdings_yangpa = d; }),
+      fbGetAll('accounts').then(function(items){ items.forEach(function(a){ cache['account_'+a.id]=a; }); })
+    ]).then(function(){ renderHoldings(); });
   }
   if (id === 'recommend') renderRecommend();
   if (id === 'issues') renderIssues();
@@ -1622,14 +1650,11 @@ applyTheme();
 setSyncDot('loading');
 setupListeners();
 initMonthSelect();
-// 보유종목은 로그인 없이도 자동 로드
-fbGetAll('holdings_minam').then(function(d){
-  cache.holdings_minam = d;
-  if (currentPage === 'holdings') renderHoldingStock('minam');
-});
-fbGetAll('holdings_yangpa').then(function(d){
-  cache.holdings_yangpa = d;
-  if (currentPage === 'holdings') renderHoldingStock('yangpa');
+// 보유종목 + 계좌정보 자동 로드
+fbGetAll('holdings_minam').then(function(d){ cache.holdings_minam = d; });
+fbGetAll('holdings_yangpa').then(function(d){ cache.holdings_yangpa = d; });
+fbGetAll('accounts').then(function(items) {
+  items.forEach(function(a) { cache['account_' + a.id] = a; });
 });
 // 공지 자동 로드
 renderPinned();
