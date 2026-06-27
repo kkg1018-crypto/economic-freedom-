@@ -711,7 +711,11 @@ function showPage(id, btn) {
   currentPage = id;
   if (id === 'schedule') renderSchedule();
   if (id === 'watchlist') renderWatchlist();
-  if (id === 'holdings') renderHoldings();
+  if (id === 'holdings') {
+    // 보유종목 페이지 진입 시 최신 데이터 로드
+    fbGetAll('holdings_minam').then(function(d){ cache.holdings_minam = d; renderHoldings(); });
+    fbGetAll('holdings_yangpa').then(function(d){ cache.holdings_yangpa = d; });
+  }
   if (id === 'recommend') renderRecommend();
   if (id === 'issues') renderIssues();
   if (id === 'memo') renderMemos(currentMemoUser);
@@ -915,8 +919,12 @@ function renderWatchlist() {
 // HOLDINGS
 // ══════════════════════════════════════════
 function showHoldingTab(user, btn) {
-  ['minam','yangpa'].forEach(function(u) { document.getElementById('holding-' + u).style.display = u === user ? 'block' : 'none'; });
-  document.querySelectorAll('#page-holdings .tab').forEach(function(t) { t.classList.remove('active'); });
+  ['minam','yangpa'].forEach(function(u) {
+    document.getElementById('holding-' + u).style.display = u === user ? 'block' : 'none';
+  });
+  // 상위 탭만 active (서브탭 건드리지 않음)
+  var topTabs = document.querySelectorAll('#page-holdings > .tabs .tab');
+  topTabs.forEach(function(t){ t.classList.remove('active'); });
   if (btn) btn.classList.add('active');
   currentHoldingUser = user;
   renderHoldings();
@@ -942,12 +950,12 @@ function saveHolding() {
       var idx = cache[col].findIndex(function(h){ return h.id === editHoldingId; });
       if (idx >= 0) cache[col][idx] = Object.assign({ id: editHoldingId }, data);
       editHoldingId = null;
-      closeModal('holdingModal'); renderHoldings(); showToast('종목이 수정됐습니다');
+      closeModal('holdingModal'); renderHoldingStock(currentHoldingUser); showToast('종목이 수정됐습니다');
     });
   } else {
     fbAdd(col, data).then(function(ref) {
       cache[col].push(Object.assign({ id: ref.id }, data));
-      closeModal('holdingModal'); renderHoldings(); showToast('종목이 추가됐습니다');
+      closeModal('holdingModal'); renderHoldingStock(currentHoldingUser); showToast('종목이 추가됐습니다');
     });
   }
 }
@@ -1056,37 +1064,32 @@ function deleteHolding(user, id) {
   var col = 'holdings_' + user;
   fbDel(col, id).then(function() {
     cache[col] = cache[col].filter(function(h) { return h.id !== id; });
-    renderHoldings();
+    renderHoldingStock(user);
   });
 }
 function renderHoldings() {
   ['minam','yangpa'].forEach(function(user) {
     var lockEl = document.getElementById(user + '-lock');
     var innerEl = document.getElementById(user + '-holding-inner');
-    if (!session[user] && !session.editor) {
-      if (lockEl) lockEl.style.display = 'flex';
-      if (innerEl) innerEl.style.display = 'none';
-      return;
-    }
+    // 누구나 볼 수 있음 (편집만 본인)
     if (lockEl) lockEl.style.display = 'none';
     if (innerEl) innerEl.style.display = 'block';
-
     renderHoldingStock(user);
     renderHoldingAccount(user);
   });
 }
 
 function showHoldingSubTab(user, tab, btn) {
-  // 서브탭 버튼 active
   var stockBtn = document.getElementById(user + '-sub-stock');
   var accBtn = document.getElementById(user + '-sub-account');
   if (stockBtn) stockBtn.classList.toggle('active', tab === 'stock');
   if (accBtn) accBtn.classList.toggle('active', tab === 'account');
-  // 섹션 보이기/숨기기
   var stockSec = document.getElementById(user + '-section-stock');
   var accSec = document.getElementById(user + '-section-account');
   if (stockSec) stockSec.style.display = tab === 'stock' ? 'block' : 'none';
   if (accSec) accSec.style.display = tab === 'account' ? 'block' : 'none';
+  // 계좌현황 탭 선택 시 데이터 새로고침
+  if (tab === 'account') renderHoldingAccount(user);
 }
 
 function renderHoldingStock(user) {
@@ -1603,7 +1606,11 @@ showPage = function(id, btn) {
   currentPage = id;
   if (id === 'schedule') renderSchedule();
   if (id === 'watchlist') renderWatchlist();
-  if (id === 'holdings') renderHoldings();
+  if (id === 'holdings') {
+    // 보유종목 페이지 진입 시 최신 데이터 로드
+    fbGetAll('holdings_minam').then(function(d){ cache.holdings_minam = d; renderHoldings(); });
+    fbGetAll('holdings_yangpa').then(function(d){ cache.holdings_yangpa = d; });
+  }
   if (id === 'recommend') renderRecommend();
   if (id === 'issues') renderIssues();
   if (id === 'memo') renderMemos(currentMemoUser);
@@ -1616,8 +1623,14 @@ setSyncDot('loading');
 setupListeners();
 initMonthSelect();
 // 보유종목은 로그인 없이도 자동 로드
-fbGetAll('holdings_minam').then(function(d){ cache.holdings_minam = d; });
-fbGetAll('holdings_yangpa').then(function(d){ cache.holdings_yangpa = d; });
+fbGetAll('holdings_minam').then(function(d){
+  cache.holdings_minam = d;
+  if (currentPage === 'holdings') renderHoldingStock('minam');
+});
+fbGetAll('holdings_yangpa').then(function(d){
+  cache.holdings_yangpa = d;
+  if (currentPage === 'holdings') renderHoldingStock('yangpa');
+});
 // 공지 자동 로드
 renderPinned();
 
