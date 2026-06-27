@@ -166,11 +166,7 @@ textarea{resize:vertical;min-height:80px;}
       <button class="btn btn-primary" onclick="requireEditor(openAddSchedule)">+ 일정 추가</button>
     </div>
   </div>
-  <!-- 범례 -->
-  <div style="display:flex;gap:16px;margin-bottom:16px;flex-wrap:wrap;">
-    <div style="display:flex;align-items:center;gap:6px;font-size:12px;"><span style="width:12px;height:12px;border-radius:3px;background:#dbeafe;border:1px solid #93c5fd;display:inline-block;"></span> 자동 고정 일정</div>
-    <div style="display:flex;align-items:center;gap:6px;font-size:12px;"><span style="width:12px;height:12px;border-radius:3px;background:#dcfce7;border:1px solid #86efac;display:inline-block;"></span> 직접 입력 일정</div>
-  </div>
+
   <div class="grid-2">
     <div class="card"><div class="card-title">🇰🇷 국내 경제</div><div id="krScheduleList"></div></div>
     <div class="card"><div class="card-title">🇺🇸 미국 경제</div><div id="usScheduleList"></div></div>
@@ -324,7 +320,7 @@ textarea{resize:vertical;min-height:80px;}
     <button class="modal-close" onclick="closeModal('scheduleModal')">✕</button>
     <div class="modal-title">📅 일정 추가</div>
     <div class="form-group mb-16"><label>날짜</label><input type="date" id="schDate"></div>
-    <div class="form-group mb-16"><label>구분</label><select id="schType"><option value="kr">🇰🇷 국내 경제 (국내 탭에 표시)</option><option value="us">🇺🇸 미국 경제 (미국 탭에 표시)</option><option value="custom">📌 기타 (국내 탭에 표시)</option></select></div>
+    <div class="form-group mb-16"><label>구분</label><select id="schType"><option value="kr">🇰🇷 국내 경제</option><option value="us">🇺🇸 미국 경제</option></select></div>
     <div class="form-group mb-16"><label>제목</label><input type="text" id="schTitle" placeholder="예: 한국은행 기준금리 결정"></div>
     <div class="form-group mb-16"><label>상세내용</label><textarea id="schDesc"></textarea></div>
     <div style="display:flex;gap:8px;justify-content:flex-end;"><button class="btn" onclick="closeModal('scheduleModal')">취소</button><button class="btn btn-primary" onclick="saveSchedule()">저장</button></div>
@@ -668,10 +664,7 @@ function showToast(msg) {
 // ══════════════════════════════════════════
 // SCHEDULE
 // ══════════════════════════════════════════
-var FIXED_SCH = {
-  kr: [{d:'05',title:'한국은행 금통위 의사록 공개'},{d:'10',title:'수출입 동향 (관세청)'},{d:'15',title:'수출입물가지수'}],
-  us: [{d:'03',title:'ISM 제조업 PMI'},{d:'05',title:'ADP 민간고용'},{d:'05',title:'ISM 서비스업 PMI'},{d:'07',title:'비농업 고용지표 (NFP)'},{d:'10',title:'CPI (소비자물가지수)'},{d:'11',title:'PPI (생산자물가지수)'},{d:'16',title:'연준 베이지북'},{d:'17',title:'소매판매'},{d:'28',title:'GDP 성장률 (잠정)'},{d:'30',title:'PCE (개인소비지출)'}]
-};
+var FIXED_SCH = { kr: [], us: [] };
 var DAYS = ['일','월','화','수','목','금','토'];
 
 function schHtml(s, yr, mo, fixed) {
@@ -684,25 +677,13 @@ function renderSchedule() {
   if (!sel) return;
   var month = sel.value;
   var parts = month.split('-'), yr = parts[0], mo = parts[1];
-
   var customs = cache.schedules.filter(function(s){ return s.month === month; });
-  var customKr = customs.filter(function(s){ return s.type === 'kr'; });
-  var customUs = customs.filter(function(s){ return s.type === 'us'; });
-  var customEtc = customs.filter(function(s){ return s.type === 'custom' || !s.type; });
-
-  // 국내: 고정 + 직접입력(국내) 합쳐서 날짜순
-  var krAll = FIXED_SCH.kr.map(function(s){ return Object.assign({}, s, {fixed:true}); })
-    .concat(customKr.map(function(s){ return Object.assign({}, s, {fixed:false}); }))
-    .concat(customEtc.map(function(s){ return Object.assign({}, s, {fixed:false}); }));
+  var krAll = customs.filter(function(s){ return s.type === 'kr' || s.type === 'custom' || !s.type; });
+  var usAll = customs.filter(function(s){ return s.type === 'us'; });
   krAll.sort(function(a,b){ return a.d.localeCompare(b.d); });
-
-  // 미국: 고정 + 직접입력(미국) 합쳐서 날짜순
-  var usAll = FIXED_SCH.us.map(function(s){ return Object.assign({}, s, {fixed:true}); })
-    .concat(customUs.map(function(s){ return Object.assign({}, s, {fixed:false}); }));
   usAll.sort(function(a,b){ return a.d.localeCompare(b.d); });
-
-  document.getElementById('krScheduleList').innerHTML = krAll.length ? krAll.map(function(s){ return schHtml(s, yr, mo, s.fixed); }).join('') : '<div class="loading-text">없음</div>';
-  document.getElementById('usScheduleList').innerHTML = usAll.length ? usAll.map(function(s){ return schHtml(s, yr, mo, s.fixed); }).join('') : '<div class="loading-text">없음</div>';
+  document.getElementById('krScheduleList').innerHTML = krAll.length ? krAll.map(function(s){ return schHtml(s, yr, mo, false); }).join('') : '<div class="loading-text">등록된 일정이 없습니다</div>';
+  document.getElementById('usScheduleList').innerHTML = usAll.length ? usAll.map(function(s){ return schHtml(s, yr, mo, false); }).join('') : '<div class="loading-text">등록된 일정이 없습니다</div>';
 }
 
 function openAddSchedule() {
