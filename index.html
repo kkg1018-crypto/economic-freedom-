@@ -704,6 +704,46 @@ var session = {
   yangpa: sessionStorage.getItem('login_yangpa') === 'true'
 };
 var priceCache = {};
+
+function fmtNum(n, d) {
+  if (n == null || isNaN(n)) return '-';
+  return n.toLocaleString('ko-KR', { minimumFractionDigits: d || 0, maximumFractionDigits: d !== undefined ? d : 2 });
+}
+
+function fetchYahoo(symbols) {
+  if (!symbols || !symbols.length) return Promise.resolve(false);
+  var joined = symbols.join(',');
+  var url = 'https://query1.finance.yahoo.com/v7/finance/quote?symbols=' + encodeURIComponent(joined) + '&fields=regularMarketPrice,regularMarketChangePercent,regularMarketChange,regularMarketPreviousClose,marketState';
+  var proxies = [
+    'https://api.allorigins.win/get?url=' + encodeURIComponent(url),
+    'https://api.allorigins.win/raw?url=' + encodeURIComponent(url)
+  ];
+  var idx = 0;
+  function tryNext() {
+    if (idx >= proxies.length) return Promise.resolve(false);
+    var proxy = proxies[idx++];
+    return fetch(proxy, { signal: AbortSignal.timeout(10000) })
+      .then(function(r) { return r.text(); })
+      .then(function(text) {
+        var parsed;
+        try { parsed = JSON.parse(text); } catch(e) { return tryNext(); }
+        var raw = (parsed && parsed.contents) ? JSON.parse(parsed.contents) : parsed;
+        var results = (raw && raw.quoteResponse && raw.quoteResponse.result) || [];
+        if (!results.length) return tryNext();
+        results.forEach(function(r) {
+          priceCache[r.symbol] = {
+            price: r.regularMarketPrice || r.regularMarketPreviousClose || 0,
+            change: r.regularMarketChange || 0,
+            changePct: r.regularMarketChangePercent || 0,
+            closed: !!(r.marketState && r.marketState !== 'REGULAR')
+          };
+        });
+        return true;
+      })
+      .catch(function() { return tryNext(); });
+  }
+  return tryNext();
+}
 var cache = {
   schedules: [], watchGroups: [], recommends: [], issues: [],
   holdings_minam: [], holdings_yangpa: [],
