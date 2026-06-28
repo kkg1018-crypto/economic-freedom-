@@ -298,6 +298,7 @@ textarea{resize:vertical;min-height:80px;}
     <div id="minam-holding-inner">
       <div style="display:flex;gap:2px;background:var(--surface2);padding:3px;border-radius:10px;width:fit-content;margin-bottom:20px;border:1px solid var(--border);">
         <button class="tab active" id="minam-sub-stock" onclick="showHoldingSubTab('minam','stock',this)">📋 보유종목</button>
+        <button class="tab" id="minam-sub-sold" onclick="showHoldingSubTab('minam','sold',this)">📤 매도종목</button>
         <button class="tab" id="minam-sub-account" onclick="showHoldingSubTab('minam','account',this)">💳 계좌현황</button>
       </div>
       <div id="minam-section-stock">
@@ -306,6 +307,13 @@ textarea{resize:vertical;min-height:80px;}
           <button class="btn btn-primary" onclick="requireUser('minam',openAddHolding,'minam')">+ 종목 추가</button>
         </div>
         <div id="minam-stock-content"><div class="loading-text"><div class="spinner"></div></div></div>
+      </div>
+      <div id="minam-section-sold" style="display:none;">
+        <div class="sec-header">
+          <span style="font-weight:800;font-size:15px;">📤 매도종목</span>
+          <button class="btn btn-primary" onclick="requireUser('minam',openAddSold,'minam')">+ 매도 기록</button>
+        </div>
+        <div id="minam-sold-content"><div class="loading-text"><div class="spinner"></div></div></div>
       </div>
       <div id="minam-section-account" style="display:none;">
         <div class="sec-header">
@@ -322,6 +330,7 @@ textarea{resize:vertical;min-height:80px;}
     <div id="yangpa-holding-inner">
       <div style="display:flex;gap:2px;background:var(--surface2);padding:3px;border-radius:10px;width:fit-content;margin-bottom:20px;border:1px solid var(--border);">
         <button class="tab active" id="yangpa-sub-stock" onclick="showHoldingSubTab('yangpa','stock',this)">📋 보유종목</button>
+        <button class="tab" id="yangpa-sub-sold" onclick="showHoldingSubTab('yangpa','sold',this)">📤 매도종목</button>
         <button class="tab" id="yangpa-sub-account" onclick="showHoldingSubTab('yangpa','account',this)">💳 계좌현황</button>
       </div>
       <div id="yangpa-section-stock">
@@ -330,6 +339,13 @@ textarea{resize:vertical;min-height:80px;}
           <button class="btn btn-primary" onclick="requireUser('yangpa',openAddHolding,'yangpa')">+ 종목 추가</button>
         </div>
         <div id="yangpa-stock-content"><div class="loading-text"><div class="spinner"></div></div></div>
+      </div>
+      <div id="yangpa-section-sold" style="display:none;">
+        <div class="sec-header">
+          <span style="font-weight:800;font-size:15px;">📤 매도종목</span>
+          <button class="btn btn-primary" onclick="requireUser('yangpa',openAddSold,'yangpa')">+ 매도 기록</button>
+        </div>
+        <div id="yangpa-sold-content"><div class="loading-text"><div class="spinner"></div></div></div>
       </div>
       <div id="yangpa-section-account" style="display:none;">
         <div class="sec-header">
@@ -502,6 +518,31 @@ textarea{resize:vertical;min-height:80px;}
     <div style="display:flex;gap:8px;justify-content:flex-end;">
       <button class="btn" onclick="closeModal('holdingModal')">취소</button>
       <button class="btn btn-primary" onclick="saveHolding()">저장</button>
+    </div>
+  </div>
+</div>
+
+<!-- 매도종목 추가 모달 -->
+<div class="modal-overlay" id="soldModal">
+  <div class="modal" style="max-width:520px;">
+    <button class="modal-close" onclick="closeModal('soldModal')">✕</button>
+    <div class="modal-title" id="soldModalTitle">📤 매도 기록 추가</div>
+    <div class="form-row mb-16">
+      <div class="form-group" style="flex:2;"><label>종목명</label><input type="text" id="sName" placeholder="삼성전자"></div>
+      <div class="form-group" style="flex:1;"><label>섹터</label><input type="text" id="sSector" placeholder="반도체"></div>
+    </div>
+    <div class="form-row mb-16">
+      <div class="form-group" style="flex:1;"><label>매수가 (원)</label><input type="number" id="sBuyPrice" placeholder="0"></div>
+      <div class="form-group" style="flex:1;"><label>매도가 (원)</label><input type="number" id="sSellPrice" placeholder="0"></div>
+    </div>
+    <div class="form-row mb-16">
+      <div class="form-group" style="flex:1;"><label>수량</label><input type="number" id="sQty" placeholder="0"></div>
+      <div class="form-group" style="flex:1;"><label>매도일</label><input type="date" id="sSellDate"></div>
+    </div>
+    <div class="form-group mb-16"><label>메모</label><input type="text" id="sMemo" placeholder="매도 사유 등"></div>
+    <div style="display:flex;gap:8px;justify-content:flex-end;">
+      <button class="btn" onclick="closeModal('soldModal')">취소</button>
+      <button class="btn btn-primary" onclick="saveSoldStock()">저장</button>
     </div>
   </div>
 </div>
@@ -812,7 +853,10 @@ function showPage(id, btn) {
   if (btn) btn.classList.add('active');
   currentPage = id;
   if (id === 'schedule') renderSchedule();
-  if (id === 'watchlist') renderWatchlist();
+  if (id === 'watchlist') {
+    // 캐시 있으면 즉시 렌더, Yahoo는 백그라운드
+    renderWatchlist();
+  }
   if (id === 'holdings') {
     Promise.all([
       fbGetAll('holdings_minam').then(function(d){ cache.holdings_minam = d; }),
@@ -1131,6 +1175,12 @@ function renderWatchlist() {
   groups.forEach(function(g) {
     (g.stocks || []).forEach(function(s) { if (s.code) allCodes.push(s.code + '.KS'); });
   });
+  // 먼저 캐시로 즉시 렌더
+  render();
+  // 그 다음 Yahoo 호출해서 주가 업데이트
+  if (allCodes.length) {
+    fetchYahoo(allCodes).then(function(ok) { if (ok) render(); });
+  }
   function render() {
     var html = '';
     groups.forEach(function(g) {
@@ -1148,7 +1198,7 @@ function renderWatchlist() {
           var pct = d ? d.changePct : null;
           var cls = 'flat', sign = '';
           if (pct != null) { if (pct > 0) { cls = 'up'; sign = '+'; } else if (pct < 0) cls = 'down'; }
-          var logoUrl = s.logo || getLogoUrl(s.code);
+          var logoUrl = getLogoUrl(s.code, s.name);
           html += '<div class="stock-row">';
           html += '<div style="display:flex;align-items:center;gap:10px;flex:1;">';
           html += '<img src="' + logoUrl + '" alt="" style="width:36px;height:36px;border-radius:10px;object-fit:contain;background:#fff;padding:3px;border:1px solid var(--border);flex-shrink:0;">'; 
@@ -1168,7 +1218,6 @@ function renderWatchlist() {
     });
     container.innerHTML = html;
   }
-  if (allCodes.length) { fetchYahoo(allCodes).then(render); } else { render(); }
 }
 
 function openAddGroup() { document.getElementById('groupName').value = ''; openModal('groupModal'); }
@@ -1344,7 +1393,6 @@ function renderWatchlist() {
       return '<div class="card mb-16"><div class="group-header"><div class="group-name">📂 ' + g.name + ' <span style="color:var(--text3);font-weight:400;font-size:12px;">(' + (g.stocks || []).length + '종목)</span></div><div style="display:flex;gap:8px;"><button class="btn btn-sm" onclick="requireEditor(openAddWatchStock,\'' + g.id + '\')">+ 종목추가</button><button class="btn btn-sm btn-danger" onclick="requireEditor(deleteGroup,\'' + g.id + '\')">그룹삭제</button></div></div>' + sh + '</div>';
     }).join('');
   }
-  if (allCodes.length) { fetchYahoo(allCodes).then(render); } else { render(); }
 }
 
 // ══════════════════════════════════════════
@@ -1390,6 +1438,85 @@ function saveHolding() {
       closeModal('holdingModal'); renderHoldingStock(currentHoldingUser); showToast('종목이 추가됐습니다');
     });
   }
+}
+
+// ── 매도종목 ──
+var currentSoldUser = 'minam';
+
+function openAddSold(user) {
+  currentSoldUser = user;
+  document.getElementById('soldModalTitle').textContent = (user==='minam'?'🍞 제빵':'🧅 양파') + ' 매도 기록';
+  ['sName','sSector','sBuyPrice','sSellPrice','sQty','sMemo'].forEach(function(id){ document.getElementById(id).value=''; });
+  document.getElementById('sSellDate').value = new Date().toISOString().split('T')[0];
+  openModal('soldModal');
+}
+
+function saveSoldStock() {
+  var name = document.getElementById('sName').value.trim();
+  var buyPrice = parseFloat(document.getElementById('sBuyPrice').value) || 0;
+  var sellPrice = parseFloat(document.getElementById('sSellPrice').value) || 0;
+  var qty = parseInt(document.getElementById('sQty').value) || 0;
+  if (!name) { showToast('종목명을 입력하세요'); return; }
+  var profit = (sellPrice - buyPrice) * qty;
+  var pct = buyPrice > 0 ? ((sellPrice - buyPrice) / buyPrice * 100) : 0;
+  var col = 'sold_' + currentSoldUser;
+  fbAdd(col, {
+    name: name,
+    sector: document.getElementById('sSector').value.trim(),
+    buyPrice: buyPrice, sellPrice: sellPrice, qty: qty,
+    profit: profit, pct: pct,
+    sellDate: document.getElementById('sSellDate').value,
+    memo: document.getElementById('sMemo').value.trim(),
+    createdAt: Date.now()
+  }).then(function() {
+    closeModal('soldModal');
+    renderSoldStocks(currentSoldUser);
+    showToast('매도 기록이 저장됐습니다 📤');
+  });
+}
+
+function deleteSoldStock(user, id) {
+  if (!confirm('삭제하시겠습니까?')) return;
+  fbDel('sold_' + user, id).then(function() { renderSoldStocks(user); });
+}
+
+function renderSoldStocks(user) {
+  var el = document.getElementById(user + '-sold-content');
+  if (!el) return;
+  el.innerHTML = '<div class="loading-text"><div class="spinner"></div></div>';
+  fbGetAll('sold_' + user).then(function(items) {
+    items.sort(function(a,b){ return (b.sellDate||'').localeCompare(a.sellDate||'') || (b.createdAt||0)-(a.createdAt||0); });
+    if (!items.length) { el.innerHTML = '<div class="card" style="text-align:center;color:var(--text3);padding:32px;">매도 기록이 없습니다</div>'; return; }
+    var totalProfit = items.reduce(function(s,i){ return s+(i.profit||0); }, 0);
+    var html = '';
+    // 합계 카드
+    var tc = totalProfit >= 0 ? 'up' : 'down';
+    html += '<div class="card mb-16" style="background:linear-gradient(135deg,var(--surface),var(--surface2));border-left:3px solid var(--accent);">';
+    html += '<div style="display:flex;gap:24px;flex-wrap:wrap;">';
+    html += '<div><div style="font-size:11px;color:var(--text3);margin-bottom:4px;">📤 총 매도 종목수</div><div style="font-size:18px;font-weight:800;">' + items.length + '건</div></div>';
+    html += '<div><div style="font-size:11px;color:var(--text3);margin-bottom:4px;">💰 총 실현손익</div><div style="font-size:18px;font-weight:800;" class="' + tc + '">' + (totalProfit>=0?'+':'') + fmtNum(totalProfit) + '원</div></div>';
+    html += '</div></div>';
+    // 테이블
+    html += '<div class="card"><div class="tbl-wrap"><table>';
+    html += '<thead><tr><th>종목명</th><th>섹터</th><th class="td-num">매수가</th><th class="td-num">매도가</th><th class="td-num">수량</th><th class="td-num">실현손익</th><th class="td-num">수익률</th><th>매도일</th><th>메모</th><th></th></tr></thead><tbody>';
+    items.forEach(function(item) {
+      var pc = (item.profit||0) >= 0 ? 'up' : 'down';
+      html += '<tr>';
+      html += '<td class="td-bold">' + item.name + '</td>';
+      html += '<td><span class="pill">' + (item.sector||'—') + '</span></td>';
+      html += '<td class="td-num">' + fmtNum(item.buyPrice) + '원</td>';
+      html += '<td class="td-num">' + fmtNum(item.sellPrice) + '원</td>';
+      html += '<td class="td-num">' + (item.qty||0).toLocaleString() + '주</td>';
+      html += '<td class="td-num ' + pc + '">' + ((item.profit||0)>=0?'+':'') + fmtNum(item.profit||0) + '원</td>';
+      html += '<td class="td-num ' + pc + '">' + ((item.pct||0)>=0?'+':'') + fmtNum(item.pct||0,2) + '%</td>';
+      html += '<td style="font-size:12px;color:var(--text3);">' + (item.sellDate||'—') + '</td>';
+      html += '<td style="font-size:12px;color:var(--text2);">' + (item.memo||'') + '</td>';
+      html += '<td><button class="btn btn-sm btn-danger" data-user="' + user + '" data-id="' + item.id + '" onclick="requireUser(this.dataset.user,deleteSoldStock,this.dataset.user,this.dataset.id)">삭제</button></td>';
+      html += '</tr>';
+    });
+    html += '</tbody></table></div></div>';
+    el.innerHTML = html;
+  });
 }
 
 function holdingAction(btn) {
@@ -1506,16 +1633,14 @@ function renderHoldings() {
 }
 
 function showHoldingSubTab(user, tab, btn) {
-  var stockBtn = document.getElementById(user + '-sub-stock');
-  var accBtn = document.getElementById(user + '-sub-account');
-  if (stockBtn) stockBtn.classList.toggle('active', tab === 'stock');
-  if (accBtn) accBtn.classList.toggle('active', tab === 'account');
-  var stockSec = document.getElementById(user + '-section-stock');
-  var accSec = document.getElementById(user + '-section-account');
-  if (stockSec) stockSec.style.display = tab === 'stock' ? 'block' : 'none';
-  if (accSec) accSec.style.display = tab === 'account' ? 'block' : 'none';
-  // 계좌현황 탭 선택 시 데이터 새로고침
+  ['stock','sold','account'].forEach(function(t) {
+    var b = document.getElementById(user + '-sub-' + t);
+    var s = document.getElementById(user + '-section-' + t);
+    if (b) b.classList.toggle('active', t === tab);
+    if (s) s.style.display = t === tab ? 'block' : 'none';
+  });
   if (tab === 'account') renderHoldingAccount(user);
+  if (tab === 'sold') renderSoldStocks(user);
 }
 
 function renderHoldingStock(user) {
@@ -2021,7 +2146,10 @@ showPage = function(id, btn) {
   if (btn) btn.classList.add('active');
   currentPage = id;
   if (id === 'schedule') renderSchedule();
-  if (id === 'watchlist') renderWatchlist();
+  if (id === 'watchlist') {
+    // 캐시 있으면 즉시 렌더, Yahoo는 백그라운드
+    renderWatchlist();
+  }
   if (id === 'holdings') {
     Promise.all([
       fbGetAll('holdings_minam').then(function(d){ cache.holdings_minam = d; }),
