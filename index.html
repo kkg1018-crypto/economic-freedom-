@@ -453,7 +453,7 @@ textarea{resize:vertical;min-height:80px;}
 <div class="modal-overlay" id="scheduleModal">
   <div class="modal">
     <button class="modal-close" onclick="closeModal('scheduleModal')">✕</button>
-    <div class="modal-title">📅 일정 추가</div>
+    <div class="modal-title" id="scheduleModalTitle">📅 일정 추가</div>
     <div class="form-group mb-16"><label>날짜</label><input type="date" id="schDate"></div>
     <div class="form-group mb-16"><label>구분</label><select id="schType"><option value="kr">🇰🇷 국내 경제</option><option value="us">🇺🇸 미국 경제</option></select></div>
     <div class="form-group mb-16"><label>제목</label><input type="text" id="schTitle" placeholder="예: 한국은행 기준금리 결정"></div>
@@ -473,11 +473,29 @@ textarea{resize:vertical;min-height:80px;}
   <div class="modal">
     <button class="modal-close" onclick="closeModal('watchModal')">✕</button>
     <div class="modal-title">⭐ 종목 추가</div>
-    <div class="form-group mb-16">
-      <label>종목 검색</label>
-      <div style="display:flex;gap:8px;">
-        <input type="text" id="watchSearchInput" placeholder="예: 삼성전자, 카카오, NAVER" style="flex:1;" oninput="searchStocks()" onkeydown="if(event.key==='Enter')searchStocks()">
-        <button class="btn btn-primary" onclick="searchStocks()">검색</button>
+    <div class="tabs" style="margin-bottom:12px;">
+      <button class="tab active" onclick="switchWatchTab('search',this)">🔍 검색</button>
+      <button class="tab" onclick="switchWatchTab('manual',this)">✏️ 직접입력</button>
+    </div>
+    <!-- 검색 탭 -->
+    <div id="watchTabSearch">
+      <div class="form-group mb-16">
+        <label>종목 검색</label>
+        <div style="display:flex;gap:8px;">
+          <input type="text" id="watchSearchInput" placeholder="예: 삼성전자, 카카오, NAVER" style="flex:1;" oninput="searchStocks()" onkeydown="if(event.key==='Enter')searchStocks()">
+          <button class="btn btn-primary" onclick="searchStocks()">검색</button>
+        </div>
+      </div>
+    </div>
+    <!-- 직접입력 탭 -->
+    <div id="watchTabManual" style="display:none;">
+      <div class="form-group mb-16">
+        <label>종목명</label>
+        <input type="text" id="watchManualName" placeholder="예: 삼성전자">
+      </div>
+      <div class="form-group mb-16">
+        <label>종목코드 (선택)</label>
+        <input type="text" id="watchManualCode" placeholder="예: 005930">
       </div>
     </div>
     <div id="watchSearchResults" style="max-height:280px;overflow-y:auto;margin-bottom:16px;border:1px solid var(--border);border-radius:var(--radius);display:none;"></div>
@@ -496,7 +514,7 @@ textarea{resize:vertical;min-height:80px;}
     <input type="hidden" id="watchLogo">
     <div style="display:flex;gap:8px;justify-content:flex-end;">
       <button class="btn" onclick="closeModal('watchModal')">취소</button>
-      <button class="btn btn-primary" id="watchAddBtn" onclick="saveWatchStock()" disabled style="opacity:.5;">추가</button>
+      <button class="btn btn-primary" id="watchAddBtn" onclick="saveWatchStock()">추가</button>
     </div>
   </div>
 </div>
@@ -946,8 +964,54 @@ var DAYS = ['일','월','화','수','목','금','토'];
 
 function schHtml(s, yr, mo, fixed) {
   var day = new Date(yr + '-' + mo + '-' + s.d).getDay();
-  return '<div class="schedule-item"><div class="schedule-date"><div class="schedule-date-num">' + s.d + '일</div><div class="schedule-date-day">' + DAYS[day] + '요일</div></div><div style="flex:1;"><div style="font-weight:600;font-size:13px;">' + s.title + '</div>' + (s.desc ? '<div style="font-size:12px;color:var(--text3);">' + s.desc + '</div>' : '') + '</div>' + (fixed ? '<span class="badge badge-info">자동</span>' : '<button class="btn btn-sm btn-danger" onclick="requireEditor(deleteSchedule,\'' + s.id + '\')">삭제</button>') + '</div>';
+  var isPinned = s.pinned === true;
+  var html = '';
+  html += '<div style="display:flex;align-items:flex-start;gap:10px;padding:12px 14px;border-radius:8px;margin-bottom:8px;border:1px solid var(--border);border-left:3px solid ' + (isPinned ? 'var(--warning)' : 'var(--accent)') + ';background:var(--surface);">';
+  html += '<div class="schedule-date"><div class="schedule-date-num" style="color:var(--accent);">' + s.d + '일</div><div class="schedule-date-day">' + DAYS[day] + '요일</div></div>';
+  html += '<div style="flex:1;min-width:0;"><div style="font-weight:600;font-size:13px;">' + (isPinned ? '📌 ' : '') + s.title + '</div>';
+  if (s.desc) html += '<div style="font-size:12px;color:var(--text2);margin-top:3px;">' + s.desc + '</div>';
+  html += '</div>';
+  if (!fixed) {
+    html += '<div style="display:flex;gap:5px;flex-shrink:0;">';
+    if (isPinned) {
+      html += '<button class="btn btn-sm" style="border-color:var(--warning);color:var(--warning);" data-id="' + s.id + '" onclick="requireEditor(toggleSchedulePin,this.dataset.id,false)">📌 해제</button>';
+    } else {
+      html += '<button class="btn btn-sm" data-id="' + s.id + '" onclick="requireEditor(toggleSchedulePin,this.dataset.id,true)">📌</button>';
+    }
+    html += '<button class="btn btn-sm" data-id="' + s.id + '" onclick="requireEditor(openEditSchedule,this.dataset.id)">✏️</button>';
+    html += '<button class="btn btn-sm btn-danger" data-id="' + s.id + '" onclick="requireEditor(deleteSchedule,this.dataset.id)">삭제</button>';
+    html += '</div>';
+  }
+  html += '</div>';
+  return html;
 }
+
+function toggleSchedulePin(id, pin) {
+  if (pin) {
+    var cnt = cache.schedules.filter(function(s){ return s.pinned; }).length;
+    if (cnt >= 5) { showToast('공지는 최대 5개까지만 가능합니다'); return; }
+  }
+  fbSet('schedules', id, { pinned: pin }).then(function() {
+    var s = cache.schedules.find(function(x){ return x.id === id; });
+    if (s) s.pinned = pin;
+    renderSchedule();
+    renderPinned();
+    showToast(pin ? '공지로 고정됐습니다 📌' : '공지가 해제됐습니다');
+  });
+}
+
+function openEditSchedule(id) {
+  var s = cache.schedules.find(function(x){ return x.id === id; });
+  if (!s) return;
+  document.getElementById('schDate').value = s.month + '-' + s.d;
+  document.getElementById('schTitle').value = s.title || '';
+  document.getElementById('schDesc').value = s.desc || '';
+  document.getElementById('schType').value = s.type || 'custom';
+  document.getElementById('scheduleModalTitle').textContent = '📅 일정 수정';
+  editScheduleId = id;
+  openModal('scheduleModal');
+}
+
 
 function renderSchedule() {
   var sel = document.getElementById('scheduleMonth');
@@ -963,9 +1027,13 @@ function renderSchedule() {
   document.getElementById('usScheduleList').innerHTML = usAll.length ? usAll.map(function(s){ return schHtml(s, yr, mo, false); }).join('') : '<div class="loading-text">등록된 일정이 없습니다</div>';
 }
 
+
+var editScheduleId = null;
 function openAddSchedule() {
+  editScheduleId = null;
+  document.getElementById('scheduleModalTitle').textContent = '📅 일정 추가';
   ['schDate','schTitle','schDesc'].forEach(function(id) { document.getElementById(id).value = ''; });
-  document.getElementById('schType').value = 'custom';
+  document.getElementById('schType').value = 'kr';
   openModal('scheduleModal');
 }
 function saveSchedule() {
@@ -973,8 +1041,16 @@ function saveSchedule() {
   var title = document.getElementById('schTitle').value.trim();
   if (!date || !title) { showToast('날짜와 제목을 입력하세요'); return; }
   var parts = date.split('-');
-  fbAdd('schedules', { month: parts[0]+'-'+parts[1], d: parts[2], title: title, desc: document.getElementById('schDesc').value.trim(), type: document.getElementById('schType').value, createdAt: Date.now() })
-    .then(function() { closeModal('scheduleModal'); showToast('일정이 저장됐습니다'); });
+  var data = { month: parts[0]+'-'+parts[1], d: parts[2], title: title, desc: document.getElementById('schDesc').value.trim(), type: document.getElementById('schType').value };
+  if (editScheduleId) {
+    fbSet('schedules', editScheduleId, data).then(function() {
+      editScheduleId = null;
+      closeModal('scheduleModal'); showToast('일정이 수정됐습니다');
+    });
+  } else {
+    data.createdAt = Date.now();
+    fbAdd('schedules', data).then(function() { closeModal('scheduleModal'); showToast('일정이 저장됐습니다'); });
+  }
 }
 function deleteSchedule(id) {
   if (!confirm('삭제하시겠습니까?')) return;
@@ -996,8 +1072,14 @@ function openAddWatchStock(groupId) {
   document.getElementById('watchName').value = '';
   document.getElementById('watchLogo').value = '';
   document.getElementById('watchSearchInput').value = '';
+  document.getElementById('watchManualName').value = '';
+  document.getElementById('watchManualCode').value = '';
   document.getElementById('watchSearchResults').style.display = 'none';
   document.getElementById('watchSelectedStock').style.display = 'none';
+  // 검색 탭으로 초기화
+  document.getElementById('watchTabSearch').style.display = 'block';
+  document.getElementById('watchTabManual').style.display = 'none';
+  document.querySelectorAll('#watchModal .tab').forEach(function(t,i){ t.classList.toggle('active', i===0); });
   var addBtn = document.getElementById('watchAddBtn');
   if (addBtn) { addBtn.disabled = true; addBtn.style.opacity = '.5'; }
   openModal('watchModal');
@@ -1112,11 +1194,35 @@ function selectStock(code, name) {
   addBtn.style.opacity = '1';
 }
 
+function switchWatchTab(tab, btn) {
+  document.getElementById('watchTabSearch').style.display = tab === 'search' ? 'block' : 'none';
+  document.getElementById('watchTabManual').style.display = tab === 'manual' ? 'block' : 'none';
+  document.querySelectorAll('#watchModal .tab').forEach(function(t){ t.classList.remove('active'); });
+  btn.classList.add('active');
+  // 직접입력탭 선택시 추가버튼 활성화
+  var addBtn = document.getElementById('watchAddBtn');
+  if (addBtn) { addBtn.disabled = false; addBtn.style.opacity = '1'; }
+}
+
 function saveWatchStock() {
+  // 직접입력 탭인지 확인
+  var manualTab = document.getElementById('watchTabManual');
+  if (manualTab && manualTab.style.display !== 'none') {
+    var manualName = document.getElementById('watchManualName').value.trim();
+    var manualCode = document.getElementById('watchManualCode').value.trim();
+    if (!manualName) { showToast('종목명을 입력하세요'); return; }
+    var g2 = cache.watchGroups.find(function(g){ return g.id === currentWatchGroup; });
+    if (!g2) return;
+    var stocks2 = (g2.stocks||[]).concat([{ id: Date.now().toString(), code: manualCode||'', name: manualName, logo: getLogoUrl(manualCode, manualName) }]);
+    fbSet('watchGroups', currentWatchGroup, { stocks: stocks2 }).then(function() {
+      closeModal('watchModal'); showToast(manualName + ' 추가됐습니다 ⭐');
+    });
+    return;
+  }
   var code = document.getElementById('watchCode').value.trim();
   var name = document.getElementById('watchName').value.trim();
   var logo = document.getElementById('watchLogo').value.trim();
-  if (!code || !name) { showToast('종목을 검색해서 선택해주세요'); return; }
+  if (!code || !name) { showToast('종목을 검색해서 선택하거나 직접입력 탭을 이용하세요'); return; }
   var g = cache.watchGroups.find(function(g) { return g.id === currentWatchGroup; });
   if (!g) { showToast('그룹을 찾을 수 없습니다'); return; }
   // 중복 체크
@@ -1212,8 +1318,14 @@ function openAddWatchStock(groupId) {
   document.getElementById('watchName').value = '';
   document.getElementById('watchLogo').value = '';
   document.getElementById('watchSearchInput').value = '';
+  document.getElementById('watchManualName').value = '';
+  document.getElementById('watchManualCode').value = '';
   document.getElementById('watchSearchResults').style.display = 'none';
   document.getElementById('watchSelectedStock').style.display = 'none';
+  // 검색 탭으로 초기화
+  document.getElementById('watchTabSearch').style.display = 'block';
+  document.getElementById('watchTabManual').style.display = 'none';
+  document.querySelectorAll('#watchModal .tab').forEach(function(t,i){ t.classList.toggle('active', i===0); });
   var addBtn = document.getElementById('watchAddBtn');
   if (addBtn) { addBtn.disabled = true; addBtn.style.opacity = '.5'; }
   openModal('watchModal');
@@ -1328,11 +1440,35 @@ function selectStock(code, name) {
   addBtn.style.opacity = '1';
 }
 
+function switchWatchTab(tab, btn) {
+  document.getElementById('watchTabSearch').style.display = tab === 'search' ? 'block' : 'none';
+  document.getElementById('watchTabManual').style.display = tab === 'manual' ? 'block' : 'none';
+  document.querySelectorAll('#watchModal .tab').forEach(function(t){ t.classList.remove('active'); });
+  btn.classList.add('active');
+  // 직접입력탭 선택시 추가버튼 활성화
+  var addBtn = document.getElementById('watchAddBtn');
+  if (addBtn) { addBtn.disabled = false; addBtn.style.opacity = '1'; }
+}
+
 function saveWatchStock() {
+  // 직접입력 탭인지 확인
+  var manualTab = document.getElementById('watchTabManual');
+  if (manualTab && manualTab.style.display !== 'none') {
+    var manualName = document.getElementById('watchManualName').value.trim();
+    var manualCode = document.getElementById('watchManualCode').value.trim();
+    if (!manualName) { showToast('종목명을 입력하세요'); return; }
+    var g2 = cache.watchGroups.find(function(g){ return g.id === currentWatchGroup; });
+    if (!g2) return;
+    var stocks2 = (g2.stocks||[]).concat([{ id: Date.now().toString(), code: manualCode||'', name: manualName, logo: getLogoUrl(manualCode, manualName) }]);
+    fbSet('watchGroups', currentWatchGroup, { stocks: stocks2 }).then(function() {
+      closeModal('watchModal'); showToast(manualName + ' 추가됐습니다 ⭐');
+    });
+    return;
+  }
   var code = document.getElementById('watchCode').value.trim();
   var name = document.getElementById('watchName').value.trim();
   var logo = document.getElementById('watchLogo').value.trim();
-  if (!code || !name) { showToast('종목을 검색해서 선택해주세요'); return; }
+  if (!code || !name) { showToast('종목을 검색해서 선택하거나 직접입력 탭을 이용하세요'); return; }
   var g = cache.watchGroups.find(function(g) { return g.id === currentWatchGroup; });
   if (!g) { showToast('그룹을 찾을 수 없습니다'); return; }
   // 중복 체크
