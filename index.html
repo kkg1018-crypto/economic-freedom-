@@ -210,11 +210,11 @@ textarea{resize:vertical;min-height:80px;}
   </div>
   <!-- 📌 공지/고정 일정 -->
   <div id="pinnedScheduleSection" style="margin-bottom:20px;">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
-      <div style="font-size:13px;font-weight:700;color:var(--warning);display:flex;align-items:center;gap:6px;">📌 공지 · 중요일정</div>
-      <button class="btn btn-sm" onclick="requireEditor(openAddPinned)" style="border-color:var(--warning);color:var(--warning);">+ 공지 추가</button>
+    <div style="display:flex;align-items:center;gap:6px;margin-bottom:10px;">
+      <div style="font-size:13px;font-weight:700;color:var(--warning);">📌 공지 (최대 5개)</div>
+      <span style="font-size:11px;color:var(--text3);">일정의 📌 버튼을 눌러 공지로 고정하세요</span>
     </div>
-    <div id="pinnedList"><div class="loading-text" style="padding:10px;">등록된 공지가 없습니다</div></div>
+    <div id="pinnedList"><div class="loading-text" style="padding:10px;">공지된 일정이 없습니다</div></div>
   </div>
 
   <div class="sec-header">
@@ -610,30 +610,6 @@ textarea{resize:vertical;min-height:80px;}
     <div style="display:flex;gap:8px;justify-content:flex-end;"><button class="btn" onclick="closeModal('issueModal')">취소</button><button class="btn btn-primary" onclick="saveIssue()">저장</button></div>
   </div>
 </div>
-<!-- 공지/고정 일정 모달 -->
-<div class="modal-overlay" id="pinnedModal">
-  <div class="modal">
-    <button class="modal-close" onclick="closeModal('pinnedModal')">✕</button>
-    <div class="modal-title">📌 공지 · 중요일정 추가</div>
-    <div class="form-group mb-16">
-      <label>중요도</label>
-      <div style="display:flex;gap:8px;">
-        <button type="button" class="pinned-level-btn active" onclick="setPinnedLevel('high',this)" style="flex:1;padding:8px;border-radius:8px;border:1.5px solid var(--danger);background:var(--danger-bg);color:var(--danger);font-weight:600;cursor:pointer;font-family:var(--font);font-size:13px;">🔴 긴급</button>
-        <button type="button" class="pinned-level-btn" onclick="setPinnedLevel('mid',this)" style="flex:1;padding:8px;border-radius:8px;border:1.5px solid var(--border);background:var(--surface);color:var(--text2);font-weight:500;cursor:pointer;font-family:var(--font);font-size:13px;">🟡 중요</button>
-        <button type="button" class="pinned-level-btn" onclick="setPinnedLevel('low',this)" style="flex:1;padding:8px;border-radius:8px;border:1.5px solid var(--border);background:var(--surface);color:var(--text2);font-weight:500;cursor:pointer;font-family:var(--font);font-size:13px;">🔵 공지</button>
-      </div>
-      <input type="hidden" id="pinnedLevel" value="high">
-    </div>
-    <div class="form-group mb-16"><label>제목</label><input type="text" id="pinnedTitle" placeholder="예: FOMC 회의 결과 발표"></div>
-    <div class="form-group mb-16"><label>날짜 (선택)</label><input type="date" id="pinnedDate"></div>
-    <div class="form-group mb-16"><label>내용</label><textarea id="pinnedDesc" placeholder="상세 내용을 입력하세요"></textarea></div>
-    <div style="display:flex;gap:8px;justify-content:flex-end;">
-      <button class="btn" onclick="closeModal('pinnedModal')">취소</button>
-      <button class="btn btn-primary" onclick="savePinned()">저장</button>
-    </div>
-  </div>
-</div>
-
 <!-- 수급 입력 모달 -->
 <div class="modal-overlay" id="supplyModal">
   <div class="modal" style="max-width:540px;">
@@ -821,7 +797,8 @@ function setupListeners() {
     db.collection(col).onSnapshot(function(snap) {
       cache[col] = snap.docs.map(function(d) { return Object.assign({ id: d.id }, d.data()); });
       setSyncDot('ok');
-      if (col === 'schedules' && currentPage === 'schedule') renderSchedule();
+      if (col === 'schedules' && currentPage === 'schedule') { renderSchedule(); renderPinned(); }
+      if (col === 'schedules') renderPinned(); // 항상 공지 업데이트
       if (col === 'watchGroups' && currentPage === 'watchlist') renderWatchlist();
       if (col === 'recommends' && currentPage === 'recommend') renderRecommend();
       if (col === 'issues' && currentPage === 'issues') renderIssues();
@@ -853,10 +830,7 @@ function showPage(id, btn) {
   if (btn) btn.classList.add('active');
   currentPage = id;
   if (id === 'schedule') renderSchedule();
-  if (id === 'watchlist') {
-    // 캐시 있으면 즉시 렌더, Yahoo는 백그라운드
-    renderWatchlist();
-  }
+  if (id === 'watchlist') renderWatchlist();
   if (id === 'holdings') {
     Promise.all([
       fbGetAll('holdings_minam').then(function(d){ cache.holdings_minam = d; }),
@@ -1164,6 +1138,20 @@ function deleteWatchStock(groupId, stockId) {
   var stocks = (g.stocks || []).filter(function(s) { return s.id !== stockId; });
   fbSet('watchGroups', groupId, { stocks: stocks });
 }
+function refreshWatchlistPrices() {
+  var groups = cache.watchGroups;
+  var allCodes = [];
+  groups.forEach(function(g) {
+    (g.stocks || []).forEach(function(s) { if (s.code) allCodes.push(s.code + '.KS'); });
+  });
+  if (!allCodes.length) return;
+  showToast('주가 업데이트 중...');
+  fetchYahoo(allCodes).then(function(ok) {
+    if (ok) { renderWatchlist(); showToast('주가 업데이트 완료!'); }
+    else showToast('주가 조회 실패 (장 마감 시간일 수 있어요)');
+  });
+}
+
 function renderWatchlist() {
   var groups = cache.watchGroups;
   var container = document.getElementById('watchlistContainer');
@@ -1171,16 +1159,7 @@ function renderWatchlist() {
     container.innerHTML = '<div class="loading-text">등록된 관심종목 그룹이 없습니다<br><small>로그인 후 그룹을 추가하세요</small></div>';
     return;
   }
-  var allCodes = [];
-  groups.forEach(function(g) {
-    (g.stocks || []).forEach(function(s) { if (s.code) allCodes.push(s.code + '.KS'); });
-  });
-  // 먼저 캐시로 즉시 렌더
-  render();
-  // 그 다음 Yahoo 호출해서 주가 업데이트
-  if (allCodes.length) {
-    fetchYahoo(allCodes).then(function(ok) { if (ok) render(); });
-  }
+  // 즉시 렌더 (주가 캐시 있으면 표시, 없으면 — 표시)
   function render() {
     var html = '';
     groups.forEach(function(g) {
@@ -1964,81 +1943,29 @@ function openLightbox(src) { document.getElementById('lightboxImg').src = src; d
 // ══════════════════════════════════════════
 // PINNED SCHEDULE (공지/고정 일정)
 // ══════════════════════════════════════════
-var currentPinnedLevel = 'high';
-
-function setPinnedLevel(level, btn) {
-  currentPinnedLevel = level;
-  document.getElementById('pinnedLevel').value = level;
-  var colors = { high: 'var(--danger)', mid: 'var(--warning)', low: 'var(--accent)' };
-  var bgs = { high: 'var(--danger-bg)', mid: 'var(--warning-bg)', low: 'var(--accent-bg)' };
-  document.querySelectorAll('.pinned-level-btn').forEach(function(b) {
-    b.style.borderColor = 'var(--border)';
-    b.style.background = 'var(--surface)';
-    b.style.color = 'var(--text2)';
-    b.style.fontWeight = '500';
-  });
-  btn.style.borderColor = colors[level];
-  btn.style.background = bgs[level];
-  btn.style.color = colors[level];
-  btn.style.fontWeight = '700';
-}
-
-function openAddPinned() {
-  ['pinnedTitle','pinnedDesc'].forEach(function(id){ document.getElementById(id).value = ''; });
-  document.getElementById('pinnedDate').value = '';
-  currentPinnedLevel = 'high';
-  document.getElementById('pinnedLevel').value = 'high';
-  document.querySelectorAll('.pinned-level-btn').forEach(function(b, i) {
-    if (i === 0) { b.style.borderColor='var(--danger)';b.style.background='var(--danger-bg)';b.style.color='var(--danger)';b.style.fontWeight='700'; }
-    else { b.style.borderColor='var(--border)';b.style.background='var(--surface)';b.style.color='var(--text2)';b.style.fontWeight='500'; }
-  });
-  openModal('pinnedModal');
-}
-
-function savePinned() {
-  var title = document.getElementById('pinnedTitle').value.trim();
-  if (!title) { showToast('제목을 입력하세요'); return; }
-  fbGetAll('pinned').then(function(items) {
-    if (items.length >= 5) { showToast('공지는 최대 5개까지 등록 가능합니다'); return; }
-    fbAdd('pinned', {
-      title: title,
-      date: document.getElementById('pinnedDate').value,
-      desc: document.getElementById('pinnedDesc').value.trim(),
-      level: document.getElementById('pinnedLevel').value,
-      createdAt: Date.now()
-    }).then(function() { closeModal('pinnedModal'); renderPinned(); showToast('공지가 등록됐습니다 📌'); });
-  });
-}
-
-function deletePinned(id) {
-  if (!confirm('삭제하시겠습니까?')) return;
-  fbDel('pinned', id).then(function(){ renderPinned(); });
-}
 
 function renderPinned() {
-  fbGetAll('pinned').then(function(items) {
-    items.sort(function(a,b){ return (a.createdAt||0)-(b.createdAt||0); });
-    var el = document.getElementById('pinnedList');
-    if (!el) return;
-    if (!items.length) { el.innerHTML = '<div class="loading-text" style="padding:10px;">등록된 공지가 없습니다</div>'; return; }
-    var levelInfo = {
-      high: { color: 'var(--danger)', bg: 'var(--danger-bg)', icon: '🔴' },
-      mid:  { color: 'var(--warning)', bg: 'var(--warning-bg)', icon: '🟡' },
-      low:  { color: 'var(--accent)', bg: 'var(--accent-bg)', icon: '🔵' }
-    };
-    el.innerHTML = items.map(function(item) {
-      var lv = levelInfo[item.level] || levelInfo.low;
-      return '<div style="display:flex;align-items:flex-start;gap:10px;padding:12px 16px;background:' + lv.bg + ';border:1.5px solid ' + lv.color + ';border-radius:10px;margin-bottom:8px;">' +
-        '<span style="font-size:18px;flex-shrink:0;">' + lv.icon + '</span>' +
-        '<div style="flex:1;min-width:0;">' +
-        '<div style="font-weight:700;font-size:14px;color:var(--text);">' + item.title + '</div>' +
-        (item.date ? '<div style="font-size:11px;color:var(--text3);margin-top:2px;">📅 ' + item.date + '</div>' : '') +
-        (item.desc ? '<div style="font-size:13px;color:var(--text2);margin-top:4px;line-height:1.6;">' + item.desc + '</div>' : '') +
-        '</div>' +
-        '<button class="btn btn-sm btn-danger" onclick="requireEditor(deletePinned,' + JSON.stringify(item.id) + ')">삭제</button>' +
-        '</div>';
-    }).join('');
-  });
+  var el = document.getElementById('pinnedList');
+  if (!el) return;
+  // cache.schedules에서 pinned=true인 것만
+  var items = cache.schedules.filter(function(s){ return s.pinned; });
+  items.sort(function(a,b){ return (a.month||'').localeCompare(b.month||'') || (a.d||'').localeCompare(b.d||''); });
+  if (!items.length) {
+    el.innerHTML = '<div class="loading-text" style="padding:10px;">공지된 일정이 없습니다<br><small style="color:var(--text3);">일정의 📌 버튼을 눌러 공지로 고정하세요</small></div>';
+    return;
+  }
+  el.innerHTML = items.map(function(item) {
+    var dateStr = item.month ? item.month.replace('-','년 ') + '월 ' + item.d + '일' : '';
+    return '<div style="display:flex;align-items:center;gap:10px;padding:12px 16px;background:var(--warning-bg);border:1.5px solid var(--warning);border-radius:10px;margin-bottom:8px;">' +
+      '<span style="font-size:18px;flex-shrink:0;">📌</span>' +
+      '<div style="flex:1;min-width:0;">' +
+      '<div style="font-weight:700;font-size:14px;color:var(--text);">' + item.title + '</div>' +
+      (dateStr ? '<div style="font-size:11px;color:var(--text3);margin-top:2px;">📅 ' + dateStr + '</div>' : '') +
+      (item.desc ? '<div style="font-size:13px;color:var(--text2);margin-top:4px;">' + item.desc + '</div>' : '') +
+      '</div>' +
+      '<button class="btn btn-sm" style="border-color:var(--warning);color:var(--warning);flex-shrink:0;" data-id="' + item.id + '" onclick="requireEditor(toggleSchedulePin,this.dataset.id,false)">해제</button>' +
+      '</div>';
+  }).join('');
 }
 
 function toggleIssuePin(id, pinned) {
@@ -2146,10 +2073,7 @@ showPage = function(id, btn) {
   if (btn) btn.classList.add('active');
   currentPage = id;
   if (id === 'schedule') renderSchedule();
-  if (id === 'watchlist') {
-    // 캐시 있으면 즉시 렌더, Yahoo는 백그라운드
-    renderWatchlist();
-  }
+  if (id === 'watchlist') renderWatchlist();
   if (id === 'holdings') {
     Promise.all([
       fbGetAll('holdings_minam').then(function(d){ cache.holdings_minam = d; }),
