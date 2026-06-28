@@ -456,10 +456,32 @@ textarea{resize:vertical;min-height:80px;}
 <div class="modal-overlay" id="watchModal">
   <div class="modal">
     <button class="modal-close" onclick="closeModal('watchModal')">✕</button>
-    <div class="modal-title">종목 추가</div>
-    <div class="form-group mb-16"><label>종목코드</label><input type="text" id="watchCode" placeholder="005930"></div>
-    <div class="form-group mb-16"><label>종목명</label><input type="text" id="watchName" placeholder="삼성전자"></div>
-    <div style="display:flex;gap:8px;justify-content:flex-end;"><button class="btn" onclick="closeModal('watchModal')">취소</button><button class="btn btn-primary" onclick="saveWatchStock()">추가</button></div>
+    <div class="modal-title">⭐ 종목 추가</div>
+    <div class="form-group mb-16">
+      <label>종목 검색</label>
+      <div style="display:flex;gap:8px;">
+        <input type="text" id="watchSearchInput" placeholder="예: 삼성전자, 카카오, NAVER" style="flex:1;" oninput="searchStocks()" onkeydown="if(event.key==='Enter')searchStocks()">
+        <button class="btn btn-primary" onclick="searchStocks()">검색</button>
+      </div>
+    </div>
+    <div id="watchSearchResults" style="max-height:280px;overflow-y:auto;margin-bottom:16px;border:1px solid var(--border);border-radius:var(--radius);display:none;"></div>
+    <div id="watchSelectedStock" style="display:none;padding:12px;background:var(--accent-bg);border-radius:var(--radius);margin-bottom:16px;border:1px solid var(--accent-light);">
+      <div style="font-size:12px;color:var(--text3);margin-bottom:4px;">선택된 종목</div>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <img id="watchSelectedLogo" src="" alt="" style="width:32px;height:32px;border-radius:8px;object-fit:contain;background:#fff;padding:2px;border:1px solid var(--border);" onerror="this.style.display='none'">
+        <div>
+          <div id="watchSelectedName" style="font-weight:700;"></div>
+          <div id="watchSelectedCode" style="font-size:12px;color:var(--text3);"></div>
+        </div>
+      </div>
+    </div>
+    <input type="hidden" id="watchCode">
+    <input type="hidden" id="watchName">
+    <input type="hidden" id="watchLogo">
+    <div style="display:flex;gap:8px;justify-content:flex-end;">
+      <button class="btn" onclick="closeModal('watchModal')">취소</button>
+      <button class="btn btn-primary" id="watchAddBtn" onclick="saveWatchStock()" disabled style="opacity:.5;">추가</button>
+    </div>
   </div>
 </div>
 <div class="modal-overlay" id="holdingModal">
@@ -914,16 +936,133 @@ function openAddWatchStock(groupId) {
   currentWatchGroup = groupId;
   document.getElementById('watchCode').value = '';
   document.getElementById('watchName').value = '';
+  document.getElementById('watchLogo').value = '';
+  document.getElementById('watchSearchInput').value = '';
+  document.getElementById('watchSearchResults').style.display = 'none';
+  document.getElementById('watchSelectedStock').style.display = 'none';
+  var addBtn = document.getElementById('watchAddBtn');
+  if (addBtn) { addBtn.disabled = true; addBtn.style.opacity = '.5'; }
   openModal('watchModal');
 }
+// 한국 주요 종목 DB (검색용)
+var STOCK_DB = [
+  {code:'005930',name:'삼성전자',sector:'반도체'},{code:'000660',name:'SK하이닉스',sector:'반도체'},
+  {code:'035420',name:'NAVER',sector:'IT'},{code:'035720',name:'카카오',sector:'IT'},
+  {code:'005380',name:'현대차',sector:'자동차'},{code:'000270',name:'기아',sector:'자동차'},
+  {code:'051910',name:'LG화학',sector:'화학'},{code:'006400',name:'삼성SDI',sector:'2차전지'},
+  {code:'373220',name:'LG에너지솔루션',sector:'2차전지'},{code:'207940',name:'삼성바이오로직스',sector:'바이오'},
+  {code:'068270',name:'셀트리온',sector:'바이오'},{code:'105560',name:'KB금융',sector:'금융'},
+  {code:'055550',name:'신한지주',sector:'금융'},{code:'086790',name:'하나금융지주',sector:'금융'},
+  {code:'032830',name:'삼성생명',sector:'보험'},{code:'003550',name:'LG',sector:'지주'},
+  {code:'066570',name:'LG전자',sector:'전자'},{code:'009540',name:'HD한국조선해양',sector:'조선'},
+  {code:'329180',name:'HD현대중공업',sector:'조선'},{code:'042660',name:'한화오션',sector:'조선'},
+  {code:'012450',name:'한화에어로스페이스',sector:'방산'},{code:'047050',name:'포스코인터내셔널',sector:'철강'},
+  {code:'005490',name:'POSCO홀딩스',sector:'철강'},{code:'028260',name:'삼성물산',sector:'건설'},
+  {code:'000830',name:'삼성C&T',sector:'건설'},{code:'096770',name:'SK이노베이션',sector:'에너지'},
+  {code:'034220',name:'LG디스플레이',sector:'디스플레이'},{code:'009150',name:'삼성전기',sector:'전자부품'},
+  {code:'011200',name:'HMM',sector:'해운'},{code:'033780',name:'KT&G',sector:'담배'},
+  {code:'030200',name:'KT',sector:'통신'},{code:'017670',name:'SK텔레콤',sector:'통신'},
+  {code:'032640',name:'LG유플러스',sector:'통신'},{code:'018260',name:'삼성에스디에스',sector:'IT서비스'},
+  {code:'003490',name:'대한항공',sector:'항공'},{code:'020560',name:'아시아나항공',sector:'항공'},
+  {code:'000100',name:'유한양행',sector:'제약'},{code:'128940',name:'한미약품',sector:'제약'},
+  {code:'145020',name:'휴젤',sector:'바이오'},{code:'326030',name:'SK바이오팜',sector:'바이오'},
+  {code:'024110',name:'기업은행',sector:'금융'},{code:'316140',name:'우리금융지주',sector:'금융'},
+  {code:'138040',name:'메리츠금융지주',sector:'금융'},{code:'000810',name:'삼성화재',sector:'보험'},
+  {code:'001450',name:'현대해상',sector:'보험'},{code:'139480',name:'이마트',sector:'유통'},
+  {code:'023530',name:'롯데쇼핑',sector:'유통'},{code:'004020',name:'현대제철',sector:'철강'},
+  {code:'010950',name:'S-Oil',sector:'에너지'},{code:'267250',name:'HD현대',sector:'지주'},
+  {code:'000120',name:'CJ대한통운',sector:'물류'},{code:'097950',name:'CJ제일제당',sector:'식품'},
+  {code:'271560',name:'오리온',sector:'식품'},{code:'280360',name:'롯데웰푸드',sector:'식품'},
+  {code:'259960',name:'크래프톤',sector:'게임'},{code:'036570',name:'엔씨소프트',sector:'게임'},
+  {code:'251270',name:'넷마블',sector:'게임'},{code:'263750',name:'펄어비스',sector:'게임'},
+  {code:'112040',name:'위메이드',sector:'게임'},{code:'047810',name:'한국항공우주',sector:'방산'},
+  {code:'064350',name:'현대로템',sector:'방산'},{code:'042700',name:'한미반도체',sector:'반도체'},
+  {code:'000990',name:'DB하이텍',sector:'반도체'},{code:'357780',name:'솔브레인',sector:'반도체'},
+  {code:'058470',name:'리노공업',sector:'반도체'},{code:'240810',name:'원익IPS',sector:'반도체'},
+  {code:'196170',name:'알테오젠',sector:'바이오'},{code:'091990',name:'셀트리온헬스케어',sector:'바이오'},
+  {code:'302440',name:'SK바이오사이언스',sector:'바이오'},{code:'214150',name:'클래시스',sector:'의료기기'},
+  {code:'352820',name:'하이브',sector:'엔터'},{code:'041510',name:'에스엠',sector:'엔터'},
+  {code:'122870',name:'와이지엔터테인먼트',sector:'엔터'},{code:'035900',name:'JYP엔터테인먼트',sector:'엔터'},
+  {code:'377300',name:'카카오페이',sector:'핀테크'},{code:'323410',name:'카카오뱅크',sector:'핀테크'},
+  {code:'293490',name:'카카오게임즈',sector:'게임'},{code:'450080',name:'에코프로비엠',sector:'2차전지'},
+  {code:'086520',name:'에코프로',sector:'2차전지'},{code:'247540',name:'에코프로비엠',sector:'2차전지'},
+  {code:'006280',name:'녹십자',sector:'제약'},{code:'185750',name:'종근당',sector:'제약'},
+  {code:'000670',name:'영풍',sector:'비철금속'},{code:'010130',name:'고려아연',sector:'비철금속'},
+  {code:'011790',name:'SKC',sector:'화학'},{code:'008770',name:'호텔신라',sector:'유통/여행'},
+  {code:'090430',name:'아모레퍼시픽',sector:'화장품'},{code:'051900',name:'LG생활건강',sector:'화장품'},
+  {code:'161890',name:'한국콜마',sector:'화장품'},{code:'002790',name:'아모레G',sector:'화장품'},
+  {code:'000080',name:'하이트진로',sector:'주류'},{code:'021240',name:'코웨이',sector:'환경가전'},
+  {code:'034730',name:'SK',sector:'지주'},{code:'015760',name:'한국전력',sector:'유틸리티'},
+  {code:'036460',name:'한국가스공사',sector:'유틸리티'},{code:'011070',name:'LG이노텍',sector:'전자부품'},
+  {code:'009830',name:'한화솔루션',sector:'에너지/화학'},{code:'010140',name:'삼성중공업',sector:'조선'},
+  {code:'042500',name:'현대위아',sector:'자동차부품'},{code:'012330',name:'현대모비스',sector:'자동차부품'},
+];
+
+function getLogoUrl(code) {
+  // 네이버 금융 종목 로고
+  return 'https://thumb.tossfeed.com/stock/' + code + '/logo/kr.png';
+}
+
+function searchStocks() {
+  var q = document.getElementById('watchSearchInput').value.trim().toLowerCase();
+  var resultsEl = document.getElementById('watchSearchResults');
+  if (!q || q.length < 1) { resultsEl.style.display = 'none'; return; }
+  var matches = STOCK_DB.filter(function(s) {
+    return s.name.toLowerCase().includes(q) || s.code.includes(q) || (s.sector||'').toLowerCase().includes(q);
+  }).slice(0, 15);
+  if (!matches.length) {
+    resultsEl.style.display = 'block';
+    resultsEl.innerHTML = '<div style="padding:16px;text-align:center;color:var(--text3);font-size:13px;">검색 결과 없음</div>';
+    return;
+  }
+  resultsEl.style.display = 'block';
+  var html = '';
+  matches.forEach(function(s) {
+    var logoUrl = getLogoUrl(s.code);
+    html += '<div class="search-result-item" data-code="' + s.code + '" data-name="' + s.name + '" onclick="selectStock(this.dataset.code,this.dataset.name)" style="display:flex;align-items:center;gap:10px;padding:10px 14px;cursor:pointer;border-bottom:1px solid var(--border);transition:background .1s;">';
+    html += '<img src="' + logoUrl + '" alt="" style="width:32px;height:32px;border-radius:8px;object-fit:contain;background:#fff;padding:2px;border:1px solid var(--border);flex-shrink:0;" onerror="this.src=\'\'">';
+    html += '<div><div style="font-weight:600;font-size:14px;">' + s.name + '</div>';
+    html += '<div style="font-size:11px;color:var(--text3);">' + s.code + ' · ' + (s.sector||'') + '</div></div>';
+    html += '</div>';
+  });
+  resultsEl.innerHTML = html;
+  // 호버 효과
+  resultsEl.querySelectorAll('.search-result-item').forEach(function(el) {
+    el.addEventListener('mouseover', function(){ this.style.background='var(--surface2)'; });
+    el.addEventListener('mouseout', function(){ this.style.background=''; });
+  });
+}
+
+function selectStock(code, name) {
+  document.getElementById('watchCode').value = code;
+  document.getElementById('watchName').value = name;
+  document.getElementById('watchLogo').value = getLogoUrl(code);
+  document.getElementById('watchSelectedName').textContent = name;
+  document.getElementById('watchSelectedCode').textContent = code;
+  document.getElementById('watchSelectedLogo').src = getLogoUrl(code);
+  document.getElementById('watchSelectedStock').style.display = 'block';
+  document.getElementById('watchSearchResults').style.display = 'none';
+  document.getElementById('watchSearchInput').value = name;
+  var addBtn = document.getElementById('watchAddBtn');
+  addBtn.disabled = false;
+  addBtn.style.opacity = '1';
+}
+
 function saveWatchStock() {
   var code = document.getElementById('watchCode').value.trim();
   var name = document.getElementById('watchName').value.trim();
-  if (!code || !name) { showToast('코드와 종목명을 입력하세요'); return; }
+  var logo = document.getElementById('watchLogo').value.trim();
+  if (!code || !name) { showToast('종목을 검색해서 선택해주세요'); return; }
   var g = cache.watchGroups.find(function(g) { return g.id === currentWatchGroup; });
-  if (!g) return;
-  var stocks = (g.stocks || []).concat([{ id: Date.now().toString(), code: code, name: name }]);
-  fbSet('watchGroups', currentWatchGroup, { stocks: stocks }).then(function() { closeModal('watchModal'); });
+  if (!g) { showToast('그룹을 찾을 수 없습니다'); return; }
+  // 중복 체크
+  var exists = (g.stocks||[]).some(function(s){ return s.code === code; });
+  if (exists) { showToast('이미 추가된 종목입니다'); return; }
+  var stocks = (g.stocks || []).concat([{ id: Date.now().toString(), code: code, name: name, logo: logo }]);
+  fbSet('watchGroups', currentWatchGroup, { stocks: stocks }).then(function() {
+    closeModal('watchModal');
+    showToast(name + ' 추가됐습니다 ⭐');
+  });
 }
 function deleteGroup(id) {
   if (!confirm('그룹을 삭제하시겠습니까?')) return;
