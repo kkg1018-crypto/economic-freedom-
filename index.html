@@ -1197,6 +1197,7 @@ function renderWatchlist() {
     });
     container.innerHTML = html;
   }
+  render(); // 즉시 실행
 }
 
 function openAddGroup() { document.getElementById('groupName').value = ''; openModal('groupModal'); }
@@ -1353,26 +1354,7 @@ function deleteWatchStock(groupId, stockId) {
   var stocks = (g.stocks || []).filter(function(s) { return s.id !== stockId; });
   fbSet('watchGroups', groupId, { stocks: stocks });
 }
-function renderWatchlist() {
-  var groups = cache.watchGroups;
-  var container = document.getElementById('watchlistContainer');
-  if (!groups.length) { container.innerHTML = '<div class="loading-text">등록된 관심종목 그룹이 없습니다<br><small>편집자 로그인 후 그룹을 추가하세요</small></div>'; return; }
-  var allCodes = [];
-  groups.forEach(function(g) { (g.stocks || []).forEach(function(s) { if (s.code) allCodes.push(s.code + '.KS'); }); });
-  function render() {
-    container.innerHTML = groups.map(function(g) {
-      var sh = (g.stocks || []).length ? (g.stocks).map(function(s) {
-        var d = priceCache[s.code + '.KS'];
-        var price = d ? fmtNum(d.price) + '원' : '—';
-        var pct = d ? d.changePct : null;
-        var cls = 'flat', sign = '';
-        if (pct != null) { if (pct > 0) { cls = 'up'; sign = '+'; } else if (pct < 0) cls = 'down'; }
-        return '<div class="stock-row"><div style="flex:1;"><div style="font-weight:600;">' + s.name + '</div><div class="stock-code">' + s.code + '</div></div><div style="text-align:right;margin-right:16px;"><div style="font-weight:700;font-size:15px;">' + price + '</div><div style="font-size:12px;"><span class="' + cls + '">' + (pct != null ? sign + fmtNum(pct, 2) + '%' : '—') + '</span></div></div><button class="btn btn-sm" onclick="requireEditor(deleteWatchStock,\'' + g.id + '\',\'' + s.id + '\')">삭제</button></div>';
-      }).join('') : '<div class="loading-text" style="padding:12px;">종목 없음</div>';
-      return '<div class="card mb-16"><div class="group-header"><div class="group-name">📂 ' + g.name + ' <span style="color:var(--text3);font-weight:400;font-size:12px;">(' + (g.stocks || []).length + '종목)</span></div><div style="display:flex;gap:8px;"><button class="btn btn-sm" onclick="requireEditor(openAddWatchStock,\'' + g.id + '\')">+ 종목추가</button><button class="btn btn-sm btn-danger" onclick="requireEditor(deleteGroup,\'' + g.id + '\')">그룹삭제</button></div></div>' + sh + '</div>';
-    }).join('');
-  }
-}
+
 
 // ══════════════════════════════════════════
 // HOLDINGS
