@@ -468,7 +468,7 @@ textarea{resize:vertical;min-height:80px;}
     <div id="watchSelectedStock" style="display:none;padding:12px;background:var(--accent-bg);border-radius:var(--radius);margin-bottom:16px;border:1px solid var(--accent-light);">
       <div style="font-size:12px;color:var(--text3);margin-bottom:4px;">선택된 종목</div>
       <div style="display:flex;align-items:center;gap:10px;">
-        <img id="watchSelectedLogo" src="" alt="" style="width:32px;height:32px;border-radius:8px;object-fit:contain;background:#fff;padding:2px;border:1px solid var(--border);" onerror="this.style.display='none'">
+        <img id="watchSelectedLogo" src="" alt="" style="width:32px;height:32px;border-radius:8px;">
         <div>
           <div id="watchSelectedName" style="font-weight:700;"></div>
           <div id="watchSelectedCode" style="font-size:12px;color:var(--text3);"></div>
@@ -1038,9 +1038,15 @@ var STOCK_DB = [
   {code:'042500',name:'현대위아',sector:'자동차부품'},{code:'012330',name:'현대모비스',sector:'자동차부품'},
 ];
 
-function getLogoUrl(code) {
-  // 네이버 금융 종목 로고
-  return 'https://thumb.tossfeed.com/stock/' + code + '/logo/kr.png';
+function getLogoUrl(code, name) {
+  // 로고 대신 종목명 첫 글자 SVG 아이콘 생성
+  var colors = ['#3b5bdb','#7048e8','#0f9960','#e03131','#d97706','#0c8599','#862e9c','#c92a2a'];
+  var colorIdx = 0;
+  if (code) { for (var i=0; i<code.length; i++) colorIdx += code.charCodeAt(i); colorIdx = colorIdx % colors.length; }
+  var bg = colors[colorIdx];
+  var letter = name ? name[0] : code ? code[0] : '?';
+  var svg = '<svg xmlns="http://www.w3.org/2000/svg" width="36" height="36"><rect width="36" height="36" rx="10" fill="' + bg + '"/><text x="18" y="24" text-anchor="middle" font-size="16" font-weight="700" fill="#fff" font-family="sans-serif">' + letter + '</text></svg>';
+  return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
 }
 
 function searchStocks() {
@@ -1058,9 +1064,9 @@ function searchStocks() {
   resultsEl.style.display = 'block';
   var html = '';
   matches.forEach(function(s) {
-    var logoUrl = getLogoUrl(s.code);
+    var logoUrl = getLogoUrl(s.code, s.name);
     html += '<div class="search-result-item" data-code="' + s.code + '" data-name="' + s.name + '" onclick="selectStock(this.dataset.code,this.dataset.name)" style="display:flex;align-items:center;gap:10px;padding:10px 14px;cursor:pointer;border-bottom:1px solid var(--border);transition:background .1s;">';
-    html += '<img src="' + logoUrl + '" alt="" style="width:32px;height:32px;border-radius:8px;object-fit:contain;background:#fff;padding:2px;border:1px solid var(--border);flex-shrink:0;" onerror="this.src=\'\'">';
+    html += '<img src="' + logoUrl + '" alt="" style="width:32px;height:32px;border-radius:8px;flex-shrink:0;">';
     html += '<div><div style="font-weight:600;font-size:14px;">' + s.name + '</div>';
     html += '<div style="font-size:11px;color:var(--text3);">' + s.code + ' · ' + (s.sector||'') + '</div></div>';
     html += '</div>';
@@ -1076,10 +1082,10 @@ function searchStocks() {
 function selectStock(code, name) {
   document.getElementById('watchCode').value = code;
   document.getElementById('watchName').value = name;
-  document.getElementById('watchLogo').value = getLogoUrl(code);
+  document.getElementById('watchLogo').value = getLogoUrl(code, name);
   document.getElementById('watchSelectedName').textContent = name;
   document.getElementById('watchSelectedCode').textContent = code;
-  document.getElementById('watchSelectedLogo').src = getLogoUrl(code);
+  document.getElementById('watchSelectedLogo').src = getLogoUrl(code, name);
   document.getElementById('watchSelectedStock').style.display = 'block';
   document.getElementById('watchSearchResults').style.display = 'none';
   document.getElementById('watchSearchInput').value = name;
@@ -1237,9 +1243,15 @@ var STOCK_DB = [
   {code:'042500',name:'현대위아',sector:'자동차부품'},{code:'012330',name:'현대모비스',sector:'자동차부품'},
 ];
 
-function getLogoUrl(code) {
-  // 네이버 금융 종목 로고
-  return 'https://thumb.tossfeed.com/stock/' + code + '/logo/kr.png';
+function getLogoUrl(code, name) {
+  // 로고 대신 종목명 첫 글자 SVG 아이콘 생성
+  var colors = ['#3b5bdb','#7048e8','#0f9960','#e03131','#d97706','#0c8599','#862e9c','#c92a2a'];
+  var colorIdx = 0;
+  if (code) { for (var i=0; i<code.length; i++) colorIdx += code.charCodeAt(i); colorIdx = colorIdx % colors.length; }
+  var bg = colors[colorIdx];
+  var letter = name ? name[0] : code ? code[0] : '?';
+  var svg = '<svg xmlns="http://www.w3.org/2000/svg" width="36" height="36"><rect width="36" height="36" rx="10" fill="' + bg + '"/><text x="18" y="24" text-anchor="middle" font-size="16" font-weight="700" fill="#fff" font-family="sans-serif">' + letter + '</text></svg>';
+  return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
 }
 
 function searchStocks() {
@@ -1257,9 +1269,9 @@ function searchStocks() {
   resultsEl.style.display = 'block';
   var html = '';
   matches.forEach(function(s) {
-    var logoUrl = getLogoUrl(s.code);
+    var logoUrl = getLogoUrl(s.code, s.name);
     html += '<div class="search-result-item" data-code="' + s.code + '" data-name="' + s.name + '" onclick="selectStock(this.dataset.code,this.dataset.name)" style="display:flex;align-items:center;gap:10px;padding:10px 14px;cursor:pointer;border-bottom:1px solid var(--border);transition:background .1s;">';
-    html += '<img src="' + logoUrl + '" alt="" style="width:32px;height:32px;border-radius:8px;object-fit:contain;background:#fff;padding:2px;border:1px solid var(--border);flex-shrink:0;" onerror="this.src=\'\'">';
+    html += '<img src="' + logoUrl + '" alt="" style="width:32px;height:32px;border-radius:8px;flex-shrink:0;">';
     html += '<div><div style="font-weight:600;font-size:14px;">' + s.name + '</div>';
     html += '<div style="font-size:11px;color:var(--text3);">' + s.code + ' · ' + (s.sector||'') + '</div></div>';
     html += '</div>';
@@ -1275,10 +1287,10 @@ function searchStocks() {
 function selectStock(code, name) {
   document.getElementById('watchCode').value = code;
   document.getElementById('watchName').value = name;
-  document.getElementById('watchLogo').value = getLogoUrl(code);
+  document.getElementById('watchLogo').value = getLogoUrl(code, name);
   document.getElementById('watchSelectedName').textContent = name;
   document.getElementById('watchSelectedCode').textContent = code;
-  document.getElementById('watchSelectedLogo').src = getLogoUrl(code);
+  document.getElementById('watchSelectedLogo').src = getLogoUrl(code, name);
   document.getElementById('watchSelectedStock').style.display = 'block';
   document.getElementById('watchSearchResults').style.display = 'none';
   document.getElementById('watchSearchInput').value = name;
